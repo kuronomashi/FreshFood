@@ -18,8 +18,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   const login = useCallback(async (email: string) => {
-    // Simulate API call
-    if (email === 'hola@gmail.com' || email === 'kponnyo@gmail.com') {
+    if (email === import.meta.env.VITE_Admin1 || email === import.meta.env.VITE_Admin2) {
       setIsAuthenticated(true);
       setIsAdmin(true);
       setUser({email, role: 'admin' });
