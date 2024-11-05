@@ -1,18 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { useCart } from '../context/CartContext';
 import { pdf } from '@react-pdf/renderer';
-import MyPDFDocument from '../components/PdfOrder';
-import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
+import PdfGenrate from '../components/PdfOrder';
+import { Pedidos } from '../Interfaces/InterfacesDeProfuctos';
 
 interface DeliveryInfo {
   name: string;
   email: string;
   phone: string;
   address: string;
-  date: string;
-  time: string;
 }
-
 interface PaymentInfo {
   cardNumber: string;
   expiryDate: string;
@@ -21,13 +18,12 @@ interface PaymentInfo {
 
 export default function OrderPage() {
   const { items, total, updateQuantity, removeItem } = useCart();
-  const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
+  const [deliveryInfo, setDeliveryInfo] = useState<Pedidos>({
+    id:'',
     name: '',
     email: '',
     phone: '',
-    address: '',
-    date: '',
-    time: ''
+    address: ''
   });
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
     cardNumber: '',
@@ -44,11 +40,11 @@ export default function OrderPage() {
 
   const CrearPdf = async () => {
     alert("Creadoooooss");
-    const blob = await pdf(<MyPDFDocument />).toBlob();
+    const blob = await pdf(<PdfGenrate Order={deliveryInfo} CarInfo={items} />).toBlob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'Kuros.pdf';
+    link.download = 'Resumen de Factura.pdf';
     link.click();
     URL.revokeObjectURL(url); // Limpiar la URL después de la descarga
   };
@@ -62,7 +58,7 @@ export default function OrderPage() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Cart Items</h2>
           {items.length === 0 ? (
-            <p className="text-gray-500">Your cart is empty</p>
+            <p className="text-gray-500">No tienes productos</p>
           ) : (
             <div className="space-y-4">
               {items.map((item) => (
@@ -141,28 +137,6 @@ export default function OrderPage() {
                     onChange={(e) => setDeliveryInfo({ ...deliveryInfo, address: e.target.value })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                   />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Delivery Date</label>
-                    <input
-                      type="date"
-                      required
-                      value={deliveryInfo.date}
-                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, date: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Delivery Time</label>
-                    <input
-                      type="time"
-                      required
-                      value={deliveryInfo.time}
-                      onChange={(e) => setDeliveryInfo({ ...deliveryInfo, time: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                    />
-                  </div>
                 </div>
               </div>
             </div>
