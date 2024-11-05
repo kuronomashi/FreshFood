@@ -1,8 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { Font } from '@react-pdf/renderer';
-import React, { useState, useRef } from 'react';
-
-import { useCart } from '../context/CartContext';
+import { Pedidos } from '../Interfaces/InterfacesDeProfuctos';
 
 // Registrar fuentes personalizadas
 Font.register({
@@ -120,33 +118,43 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function InvoicePDF({
-invoiceData = {
-  invoiceNumber: 'FF-2024-001',
-  date: '20/01/2024',
-  customerName: 'Juan Pérez',
-  customerEmail: 'juan@example.com',
-  customerAddress: 'Calle Principal 123',
-  items: [
-    { description: 'Ensalada César', quantity: 2, price: 12.99 },
-    { description: 'Smoothie Verde', quantity: 3, price: 6.99 },
-    { description: 'Bowl de Quinoa', quantity: 1, price: 15.99 },
-  ],
-  subtotal: 63.94,
-  tax: 5.12,
-  total: 69.06,
-} }) {
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface ModelOrder {
+  Order: Pedidos;
+  CarInfo: CartItem[];
+}
+
+export default function InvoicePDF({ Order,CarInfo }: ModelOrder) {
+
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+
+  const formattedTime = today.toLocaleTimeString('es-ES', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+
+  const total = CarInfo.reduce((acc, item) => acc + item.quantity * item.price, 0);
+
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Header Section */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Image
-              src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&h=200&fit=crop"
-              style={styles.logo}
-            />
-            <Text style={styles.title}>Kulo</Text>
+            <Text style={styles.title}>Resumen de compra  </Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.invoiceDetails}>Fresh Food, Inc.</Text>
@@ -159,34 +167,40 @@ invoiceData = {
         {/* Invoice Details */}
         <View>
           <Text style={[styles.invoiceDetails, { marginBottom: 5 }]}>
-            Factura #: {invoiceData.invoiceNumber}
+            Factura #: {"2"}
           </Text>
           <Text style={[styles.invoiceDetails, { marginBottom: 5 }]}>
-            Fecha: {invoiceData.date}
+            Fecha: {formattedDate}
           </Text>
           <Text style={[styles.invoiceDetails, { marginBottom: 5 }]}>
-            Cliente: {invoiceData.customerName}
+            Hora: {formattedTime}
           </Text>
           <Text style={[styles.invoiceDetails, { marginBottom: 5 }]}>
-            Email: {invoiceData.customerEmail}
+            Cliente: {Order.name}
+          </Text>
+          <Text style={[styles.invoiceDetails, { marginBottom: 5 }]}>
+            Email: {Order.email}
+          </Text>
+          <Text style={[styles.invoiceDetails, { marginBottom: 5 }]}>
+            Telefono: {Order.phone}
           </Text>
           <Text style={styles.invoiceDetails}>
-            Dirección: {invoiceData.customerAddress}
+            Dirección: {Order.address}
           </Text>
         </View>
 
         {/* Table */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Descripción</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Nombre</Text>
             <Text style={styles.tableHeaderCell}>Cantidad</Text>
             <Text style={styles.tableHeaderCell}>Precio Unit.</Text>
             <Text style={styles.tableHeaderCell}>Total</Text>
           </View>
           
-          {invoiceData.items.map((item, index) => (
+          {CarInfo.map((item, index) => (
             <View key={index} style={styles.tableRow}>
-              <Text style={[styles.tableCell, { flex: 2 }]}>{item.description}</Text>
+              <Text style={[styles.tableCell, { flex: 2 }]}>{item.name}</Text>
               <Text style={styles.tableCell}>{item.quantity}</Text>
               <Text style={styles.tableCell}>${item.price.toFixed(2)}</Text>
               <Text style={styles.tableCell}>${(item.quantity * item.price).toFixed(2)}</Text>
@@ -197,16 +211,8 @@ invoiceData = {
         {/* Totals */}
         <View style={styles.totalSection}>
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Subtotal</Text>
-            <Text style={styles.totalAmount}>${invoiceData.subtotal.toFixed(2)}</Text>
-          </View>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>IVA (8%)</Text>
-            <Text style={styles.totalAmount}>${invoiceData.tax.toFixed(2)}</Text>
-          </View>
-          <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalAmount}>${invoiceData.total.toFixed(2)}</Text>
+            <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
           </View>
         </View>
 
@@ -216,12 +222,6 @@ invoiceData = {
             ¡Gracias por elegir Fresh Food! Alimentando tu bienestar.
           </Text>
         </View>
-
-        {/* Decorative Image */}
-        <Image
-          src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=200&h=200&fit=crop"
-          style={styles.decorativeImage}
-        />
       </Page>
     </Document>
   );

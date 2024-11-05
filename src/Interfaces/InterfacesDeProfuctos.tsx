@@ -19,3 +19,11 @@ export interface ProductoSinID {
   stock:number;
   expiryDate:string;
 }
+
+export interface Pedidos{
+  id:string;
+   name: string;
+  email: string;
+  phone: string;
+  address: string;
+}
