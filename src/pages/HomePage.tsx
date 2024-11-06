@@ -7,7 +7,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Db } from '../Firebase';
 import { ProductoInt } from '../Interfaces/InterfacesDeProfuctos';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { GoogleAuthProvider, signInWithPopup, getAuth, User, sendEmailVerification } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, getAuth, User, sendEmailVerification,sendPasswordResetEmail  } from "firebase/auth";
 
 export default function HomePage() {
   const { isAuthenticated, login } = useAuth();
@@ -48,7 +48,19 @@ export default function HomePage() {
     }
   };
 
-  const InicioSesionUsuiaro = async (e: React.FormEvent) => {
+  const RecuperarContraseña = async (e: React.FormEvent) => {
+    e.preventDefault();
+  try {
+    const auth = getAuth();
+    await sendPasswordResetEmail(auth, email);
+    alert('Se ha enviado un correo para restablecer la contraseña');
+  } catch (error) {
+    alert('Error al intentar restablecer la contraseña');
+    console.error("Error al recuperar la contraseña:", error);
+  }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -62,7 +74,7 @@ export default function HomePage() {
         alert('Por favor verifica tu correo antes de continuar.');
       }
     } catch (error) {
-      console.error('Error en el inicio de sesión:', error);
+      alert('Error en el inicio de sesión:');
     }
   };
 
@@ -174,7 +186,7 @@ export default function HomePage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-8 max-w-md w-full">
             <h2 className="text-3xl font-bold mb-6 text-center">Login</h2>
-            <form onSubmit={InicioSesionUsuiaro}>
+            <form onSubmit={handleSubmit}>
               <div className="mb-4">
                 <label className="block text-gray-700 mb-2">Email</label>
                 <input
@@ -199,6 +211,7 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-4">
+                <div className='flex justify-between'>
                 <button
                   type="button"
                   onClick={CrearNuevoUsuario}
@@ -208,7 +221,15 @@ export default function HomePage() {
                 </button>
                 <button
                   type="button"
-                  onClick={InicioSesionUsuiaro}
+                  onClick={RecuperarContraseña}
+                  className="text-neutral-500 transition-transform duration-200 hover:scale-105"
+                >
+                  forget password
+                </button>
+                </div>
+               
+                <button
+                  type="submit"
                   className="bg-green-600 text-xl font-bold text-white w-full py-1 rounded-md hover:bg-green-700 flex justify-center items-center border-3 border-blue-500 transition-transform duration-200 hover:scale-105"
                 >
                   Login
