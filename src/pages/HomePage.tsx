@@ -234,14 +234,8 @@ export default function HomePage() {
                 >
                   Login
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowLogin(false)}
-                  className="bg-white text-xl font-bold text-neutral-500 w-full py-1 rounded-md hover:bg-zinc-100 flex justify-center items-center border-2 border-border-gray-500 transition-transform duration-200 hover:scale-105"
-                >
-                  Cancel
-                </button>
-                <button
+
+                 <button
                   onClick={AccederconGoogle}
                   className="bg-white text-xl font-bold text-neutral-500 w-full py-1 rounded-2xl hover:bg-zinc-100 flex justify-center items-center border-2 gradient-border transition-transform duration-200 hover:scale-105"
                 >
@@ -249,6 +243,15 @@ export default function HomePage() {
                   <h1 className="text-center mr-8">Google</h1>
 
                 </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setShowLogin(false)}
+                  className="bg-white text-xl font-bold text-neutral-500 w-full py-1 rounded-md hover:bg-zinc-100 flex justify-center items-center border-2 border-border-gray-500 transition-transform duration-200 hover:scale-105"
+                >
+                  Cancel
+                </button>
+               
               </div>
             </form>
           </div>
