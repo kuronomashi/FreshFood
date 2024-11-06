@@ -41,30 +41,30 @@ export default function AdminDashboard() {
       <div className="flex justify-between items-center  mb-8">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         <div className="flex items-center space-x-2 font-bold">
-        <Link
-          to="/admin/pedidos"
-          className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-        >
-          <BoxIcon className="h-5 w-5" />
-          <span>Admin Order</span>
-        </Link>
+          <Link
+            to="/admin/pedidos"
+            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+          >
+            <BoxIcon className="h-5 w-5" />
+            <span>Admin Order</span>
+          </Link>
 
-        <Link
-          to="/admin/inventory"
-          className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-        >
-          <Key className="h-5 w-5" />
-          <span>Admin Inventory</span>
-        </Link>
-        <Link
-          to="/admin/products/new"
-          className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-        >
-          <Plus className="h-5 w-5" />
-          <span>Add New Product</span>
-        </Link>
+          <Link
+            to="/admin/inventory"
+            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+          >
+            <Key className="h-5 w-5" />
+            <span>Admin Inventory</span>
+          </Link>
+          <Link
+            to="/admin/products/new"
+            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+          >
+            <Plus className="h-5 w-5" />
+            <span>Add New Product</span>
+          </Link>
         </div>
-        
+
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -94,7 +94,11 @@ export default function AdminDashboard() {
                   <div key={producto.id} className={`flex items-center justify-between p-4 ${producto.stock < 5 ? 'bg-red-50' : 'bg-yellow-50'} rounded-md`}>
                     <div>
                       <h3 className="font-medium">{producto.name}</h3>
-                      <p className="text-sm text-gray-600">Only {producto.stock} units remaining</p>
+                      {producto.stock > 0 ? (
+                        <p className="text-sm text-gray-600">Only {producto.stock} units remaining</p>
+                      ) : (
+                        <p className="text-sm text-red-600">Out of stock</p>
+                      )}
                     </div>
                     <Link
                       to="/admin/inventory"
@@ -124,9 +128,16 @@ export default function AdminDashboard() {
                   <div key={producto.id} className={`flex items-center justify-between p-4 ${producto.stock < 5 ? 'bg-red-50' : 'bg-orange-50'} rounded-md`}>
                     <div>
                       <h3 className="font-medium">{producto.name}</h3>
-                      <p className="text-sm text-gray-600">
-                        {daysLeft < 0 ? 'Expired' : daysLeft === 0 ? 'Expires Today' : `Expires in ${daysLeft} days`}
+                      {daysLeft >= 0 ? (
+                         <p className="text-sm text-gray-600">
+                         {daysLeft === 0 ? 'Expires Today' : `Expires in ${daysLeft} days`}
+                       </p>
+                      ) : (
+                        <p className="text-sm text-red-600">
+                        {'Expired'}
                       </p>
+                      )}
+                     
                     </div>
                     <Link
                       to="/admin/inventory"

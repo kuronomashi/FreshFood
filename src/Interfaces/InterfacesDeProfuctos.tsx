@@ -10,15 +10,6 @@ export interface ProductoInt {
   expiryDate:string;
 }
 
-export interface ProductoSinID {
-  name: string;
-  category: string;
-  price: number;
-  description: string;
-  Imagen: string;
-  stock:number;
-  expiryDate:string;
-}
 
 
 interface CartItem {

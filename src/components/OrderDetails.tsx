@@ -48,7 +48,7 @@ export default function OrderDetails({ order }: OrderDetailsProps) {
                         <Mail className="w-5 h-5 text-emerald-600" />
                         <div>
                             <p className="text-sm text-gray-500">Email</p>
-                            <p className="font-medium">{order.email}</p>
+                            <p className="font-medium ">{order.email}</p>
                         </div>
                     </div>
                     <div className="flex items-center space-x-3">
