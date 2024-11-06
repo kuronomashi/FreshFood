@@ -3,8 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import OrderPage from './pages/OrderPage';
-import PdfOrder from "./components/PdfOrder";
-import PaginapruebaFirebase from './components/ListaDeProductos';
+import AdminPedido from './pages/Adminpepedidos';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminInventory from './pages/AdminInventory';
 import AdminProducts from './pages/AdminProducts';
@@ -13,6 +12,7 @@ import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { Home } from 'lucide-react';
 
 
 function App() {
@@ -55,6 +55,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <AddProduct />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/pedidos"
+                  element={
+                    <ProtectedRoute>
+                      <AdminPedido />
                     </ProtectedRoute>
                   }
                 />

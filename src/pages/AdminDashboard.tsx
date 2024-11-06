@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
-import { Package, ShoppingBag, AlertTriangle, Plus, Key } from 'lucide-react';
+import { Package, ShoppingBag, AlertTriangle, Plus, Key, BoxIcon } from 'lucide-react';
 import { collection, getDocs } from "firebase/firestore";
 import { Db, auth } from '../Firebase';
 import { ProductoInt } from '../Interfaces/InterfacesDeProfuctos';
@@ -38,9 +38,17 @@ export default function AdminDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center  mb-8">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         <div className="flex items-center space-x-2 font-bold">
+        <Link
+          to="/admin/pedidos"
+          className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+        >
+          <BoxIcon className="h-5 w-5" />
+          <span>Admin Order</span>
+        </Link>
+
         <Link
           to="/admin/inventory"
           className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"

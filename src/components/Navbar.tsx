@@ -16,13 +16,15 @@ export default function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <span className="font-bold text-xl">Fresh Foods</span>
+              <span className="font-bold text-2xl">Fresh Foods</span>
             </Link>
           </div>
 
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="hover:text-green-200">Home</Link>
-            <Link to="/order" className="hover:text-green-200">Order</Link>
+            {isAuthenticated && (
+              <Link to="/order" className="hover:text-green-200">Order</Link>
+            )}
             {isAdmin && (
               <Link to="/admin" className="hover:text-green-200">Admin</Link>
             )}
