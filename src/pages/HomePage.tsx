@@ -224,7 +224,7 @@ export default function HomePage() {
                   onClick={RecuperarContraseña}
                   className="text-neutral-500 transition-transform duration-200 hover:scale-105"
                 >
-                  forget password
+                  forget password?
                 </button>
                 </div>
                
