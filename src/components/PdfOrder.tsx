@@ -1,5 +1,7 @@
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { Font } from '@react-pdf/renderer';
+import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect} from 'react';
 import { Pedidos } from '../Interfaces/InterfacesDeProfuctos';
 
 // Registrar fuentes personalizadas
@@ -117,20 +119,25 @@ const styles = StyleSheet.create({
     opacity: 0.1,
   },
 });
-
+interface producto {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  productos: CartItem[]
+}
 interface CartItem {
   id: string;
   name: string;
   price: number;
   quantity: number;
 }
-
 interface ModelOrder {
   Order: Pedidos;
   CarInfo: CartItem[];
 }
-
-export default function InvoicePDF({ Order,CarInfo }: ModelOrder) {
+export default function InvoicePDF({ Order, CarInfo }: ModelOrder) {
 
   const today = new Date();
   const formattedDate = today.toLocaleDateString('es-ES', {
@@ -138,15 +145,21 @@ export default function InvoicePDF({ Order,CarInfo }: ModelOrder) {
     month: '2-digit',
     day: '2-digit',
   });
-
   const formattedTime = today.toLocaleTimeString('es-ES', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
   });
+  const [product, setPedido] = useState<producto>({
+    id: '',
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    productos: []
+  });
 
   const total = CarInfo.reduce((acc, item) => acc + item.quantity * item.price, 0);
-
 
   return (
     <Document>
@@ -197,7 +210,7 @@ export default function InvoicePDF({ Order,CarInfo }: ModelOrder) {
             <Text style={styles.tableHeaderCell}>Precio Unit.</Text>
             <Text style={styles.tableHeaderCell}>Total</Text>
           </View>
-          
+
           {CarInfo.map((item, index) => (
             <View key={index} style={styles.tableRow}>
               <Text style={[styles.tableCell, { flex: 2 }]}>{item.name}</Text>

@@ -20,10 +20,20 @@ export interface ProductoSinID {
   expiryDate:string;
 }
 
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
 export interface Pedidos{
   id:string;
-   name: string;
+  name: string;
   email: string;
   phone: string;
   address: string;
+  productos: CartItem[]
+  date: string;
 }

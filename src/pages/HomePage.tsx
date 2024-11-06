@@ -4,12 +4,10 @@ import { useCart } from '../context/CartContext';
 import { ShoppingCart } from 'lucide-react';
 import { collection, getDocs } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { Db,auth} from '../Firebase';
+import { Db } from '../Firebase';
 import { ProductoInt } from '../Interfaces/InterfacesDeProfuctos';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { GoogleAuthProvider, signInWithPopup, getAuth, User, sendEmailVerification } from "firebase/auth";
-
-
 
 export default function HomePage() {
   const { isAuthenticated, login } = useAuth();
@@ -30,13 +28,13 @@ export default function HomePage() {
         setProducts(productList);
       } catch (error) {
         setError((error as Error).message);
-      } 
+      }
     };
 
     fetchProducts();
   }, []);
 
-  const CrearNuevoUsuario = async  (e: React.FormEvent) => {
+  const CrearNuevoUsuario = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -75,8 +73,9 @@ export default function HomePage() {
       const userCredential = await signInWithPopup(auth, provider);
       alert('Usuario logueado con éxito!');
       const user: User = userCredential.user;
-      const emailG: string = user.email ?? ""; 
+      const emailG: string = user.email ?? "";
       const displayNameG: string = user.displayName ?? "Usuario: ";
+
       alert(`Bienvenido, ${displayNameG}! Has ingresado con el correo: ${emailG}`);
       login(emailG);
       setShowLogin(false);
@@ -85,7 +84,16 @@ export default function HomePage() {
     }
   };
 
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
+  const filteredProducts = selectedCategory === 'All'
+    ? products
+    : products.filter(product => product.category === selectedCategory);
+
+  // Manejar el cambio de categoría
+  const handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCategory(event.target.value);
+  };
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -94,13 +102,13 @@ export default function HomePage() {
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-4">Fresh Foods Distribution</h1>
             <p className="text-xl mb-8">Premium Quality Fruits, Vegetables, and Dairy Products</p>
-            {!isAuthenticated && ( <button  
+            {!isAuthenticated && (<button
               onClick={() => setShowLogin(true)}
               className="bg-white text-green-600 font-bold px-6 py-3 rounded-md font-semibold hover:bg-green-50"
             >
               Acceder
             </button>)}
-           
+
           </div>
         </div>
       </section>
@@ -108,9 +116,28 @@ export default function HomePage() {
       {/* Products Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12">Nuestros productos</h2>
+          <div className='flex flex-col items-center text-center mb-8'>
+          <h2 className="text-3xl font-bold text-center mb-8">Nuestros productos</h2>
+          <div className="flex items-center mb-8">
+            <label htmlFor="category" className="mr-4 text- font-medium">Filtrar:</label>
+            <select
+              id="category"
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              className="px-2 border rounded-md"
+            >
+              <option value="All">All</option>
+              <option value="Fruits">Fruits</option>
+              <option value="Vegetables">Vegetables</option>
+              <option value="Dairy">Dairy</option>
+              {/* Añade más opciones según tus categorías */}
+            </select>
+          </div>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((product) => (
+
+            {filteredProducts.filter((product) => product.stock > 0).map((product) => (
               <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                 <img
                   src={product.Imagen}
@@ -172,15 +199,16 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-4">
-              <button
+                <button
                   type="button"
                   onClick={CrearNuevoUsuario}
                   className="text-neutral-500 transition-transform duration-200 hover:scale-105"
                 >
                   sing up
                 </button>
-              <button
-                  type="submit"
+                <button
+                  type="button"
+                  onClick={InicioSesionUsuiaro}
                   className="bg-green-600 text-xl font-bold text-white w-full py-1 rounded-md hover:bg-green-700 flex justify-center items-center border-3 border-blue-500 transition-transform duration-200 hover:scale-105"
                 >
                   Login
@@ -196,9 +224,9 @@ export default function HomePage() {
                   onClick={AccederconGoogle}
                   className="bg-white text-xl font-bold text-neutral-500 w-full py-1 rounded-2xl hover:bg-zinc-100 flex justify-center items-center border-2 gradient-border transition-transform duration-200 hover:scale-105"
                 >
-                  <img src="https://img.icons8.com/?size=512&id=17949&format=png" className="h-6 w-6 mr-4"/>
+                  <img src="https://img.icons8.com/?size=512&id=17949&format=png" className="h-6 w-6 mr-4" />
                   <h1 className="text-center mr-8">Google</h1>
-                  
+
                 </button>
               </div>
             </form>
