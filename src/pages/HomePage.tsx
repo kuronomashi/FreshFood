@@ -7,12 +7,13 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Db } from '../Firebase';
 import { ProductoInt } from '../Interfaces/InterfacesDeProfuctos';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { GoogleAuthProvider, signInWithPopup, getAuth, User, sendEmailVerification,sendPasswordResetEmail  } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, getAuth, User, sendEmailVerification, sendPasswordResetEmail } from "firebase/auth";
 
 export default function HomePage() {
   const { isAuthenticated, login } = useAuth();
   const { addItem } = useCart();
   const [showLogin, setShowLogin] = useState(false);
+  const [esadmin, CambiarUsuarioA] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [products, setProducts] = useState<ProductoInt[]>([]);
@@ -50,14 +51,14 @@ export default function HomePage() {
 
   const RecuperarContraseña = async (e: React.FormEvent) => {
     e.preventDefault();
-  try {
-    const auth = getAuth();
-    await sendPasswordResetEmail(auth, email);
-    alert('Se ha enviado un correo para restablecer la contraseña');
-  } catch (error) {
-    alert('Error al intentar restablecer la contraseña');
-    console.error("Error al recuperar la contraseña:", error);
-  }
+    try {
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, email);
+      alert('Se ha enviado un correo para restablecer la contraseña');
+    } catch (error) {
+      alert('Error al intentar restablecer la contraseña');
+      console.error("Error al recuperar la contraseña:", error);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,7 +67,6 @@ export default function HomePage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       if (user.emailVerified) {
-        alert('Inicio de sesión exitoso');
         login(email);
         setShowLogin(false);
       } else {
@@ -83,16 +83,23 @@ export default function HomePage() {
     const provider = new GoogleAuthProvider();
     try {
       const userCredential = await signInWithPopup(auth, provider);
-      alert('Usuario logueado con éxito!');
       const user: User = userCredential.user;
       const emailG: string = user.email ?? "";
       const displayNameG: string = user.displayName ?? "Usuario: ";
-
-      alert(`Bienvenido, ${displayNameG}! Has ingresado con el correo: ${emailG}`);
       login(emailG);
       setShowLogin(false);
     } catch (error) {
       console.error("Error al acceder con Google:", error);
+    }
+  };
+
+  const CombrobarCorreoDeAdministrador = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const correo = e.target.value;
+    setEmail(e.target.value)
+    if(correo == "lovitoxz1@gmail.com"){
+      CambiarUsuarioA(true)
+    }else{
+      CambiarUsuarioA(false)
     }
   };
 
@@ -112,8 +119,8 @@ export default function HomePage() {
       <section className="relative bg-green-600 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold mb-4">Fresh Foods Distribution</h1>
-            <p className="text-xl mb-8">Premium Quality Fruits, Vegetables, and Dairy Products</p>
+            <h1 className="text-4xl font-bold mb-4">Fresh Foods Distribuidor</h1>
+            <p className="text-xl mb-8">Frutas, verduras y productos lácteos de primera calidad</p>
             {!isAuthenticated && (<button
               onClick={() => setShowLogin(true)}
               className="bg-white text-green-600 font-bold px-6 py-3 rounded-md font-semibold hover:bg-green-50"
@@ -129,28 +136,29 @@ export default function HomePage() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className='flex flex-col items-center text-center mb-8'>
-          <h2 className="text-3xl font-bold text-center mb-8">Nuestros productos</h2>
-          <div className="flex items-center mb-8">
-            <label htmlFor="category" className="mr-4 text- font-medium">Filtrar:</label>
-            <select
-              id="category"
-              value={selectedCategory}
-              onChange={handleCategoryChange}
-              className="px-2 border rounded-md"
-            >
-              <option value="All">All</option>
-              <option value="Fruits">Fruits</option>
-              <option value="Vegetables">Vegetables</option>
-              <option value="Dairy">Dairy</option>
-              {/* Añade más opciones según tus categorías */}
-            </select>
+            <h2 className="text-3xl font-bold text-center mb-8">Nuestros productos</h2>
+            <div className="flex items-center mb-8">
+              <label htmlFor="category" className="mr-4 text- font-medium">Filtrar:</label>
+              <select
+                id="category"
+                value={selectedCategory}
+                onChange={handleCategoryChange}
+                className="px-2 border rounded-md"
+              >
+                <option value="All">Todos</option>
+                <option value="Fruits">Frutas</option>
+                <option value="Vegetables">Vegetales</option>
+                <option value="Dairy">Otros</option>
+                {/* Añade más opciones según tus categorías */}
+              </select>
+            </div>
           </div>
-          </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
             {filteredProducts.filter((product) => product.stock > 0).map((product) => (
               <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                <h1>{product.id}</h1>
                 <img
                   src={product.Imagen}
                   alt={product.name}
@@ -158,21 +166,30 @@ export default function HomePage() {
                 />
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-semibold">{product.name}</h3>
+                    <div>
+                    <h3 className="text-xl font-semibold break-words max-w-[250px] break-words">{product.name}</h3>
+                    </div>
+                   
+                    <div>
                     <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded">
                       {product.category}
                     </span>
+                    </div>
+                   
                   </div>
-                  <p className="text-gray-600 mb-4">{product.description}</p>
+                  <p className="text-gray-600 mb-4 break-words">{product.description}</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-green-600">${product.price}</span>
-                    <button
-                      onClick={() => addItem({ ...product, quantity: 1 })}
-                      className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                    >
-                      <ShoppingCart className="h-5 w-5" />
-                      <span>Add to Cart</span>
-                    </button>
+                    <span className="text-2xl font-bold text-green-600">${product.price.toFixed(2)}</span>
+                    {isAuthenticated && (
+                      <button
+                        onClick={() => addItem({ ...product, quantity: 1 })}
+                        className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                      >
+                        <ShoppingCart className="h-5 w-5" />
+                        <span>Añadir a la Cesta</span>
+                      </button>
+                    )}
+
                   </div>
                 </div>
               </div>
@@ -191,8 +208,8 @@ export default function HomePage() {
                 <label className="block text-gray-700 mb-2">Email</label>
                 <input
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={email || ''}
+                  onChange={CombrobarCorreoDeAdministrador}
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   required
                 />
@@ -201,7 +218,7 @@ export default function HomePage() {
                 <label className="block text-gray-700 mb-2">Password</label>
                 <input
                   type="password"
-                  value={password}
+                  value={password || ''}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   required
@@ -211,35 +228,29 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-4">
-                <div className='flex justify-between'>
-                <button
-                  type="button"
-                  onClick={CrearNuevoUsuario}
-                  className="text-neutral-500 transition-transform duration-200 hover:scale-105"
-                >
-                  sing up
-                </button>
-                <button
-                  type="button"
-                  onClick={RecuperarContraseña}
-                  className="text-neutral-500 transition-transform duration-200 hover:scale-105"
-                >
-                  forget password?
-                </button>
-                </div>
-               
+              {!esadmin && (
+                     <div className='flex justify-between'>
+                     <button
+                       type="button"
+                       onClick={CrearNuevoUsuario}
+                       className="text-neutral-500 transition-transform duration-200 hover:scale-105"
+                     >
+                       sing up
+                     </button>
+                     <button
+                       type="button"
+                       onClick={RecuperarContraseña}
+                       className="text-neutral-500 transition-transform duration-200 hover:scale-105"
+                     >
+                       forget password?
+                     </button>
+                   </div>
+                    )}
                 <button
                   type="submit"
                   className="bg-green-600 text-xl font-bold text-white w-full py-1 rounded-md hover:bg-green-700 flex justify-center items-center border-3 border-blue-500 transition-transform duration-200 hover:scale-105"
                 >
                   Login
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowLogin(false)}
-                  className="bg-white text-xl font-bold text-neutral-500 w-full py-1 rounded-md hover:bg-zinc-100 flex justify-center items-center border-2 border-border-gray-500 transition-transform duration-200 hover:scale-105"
-                >
-                  Cancel
                 </button>
                 <button
                   onClick={AccederconGoogle}
@@ -249,6 +260,14 @@ export default function HomePage() {
                   <h1 className="text-center mr-8">Google</h1>
 
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setShowLogin(false)}
+                  className="bg-white text-xl font-bold text-neutral-500 w-full py-1 rounded-md hover:bg-zinc-100 flex justify-center items-center border-2 border-border-gray-500 transition-transform duration-200 hover:scale-105"
+                >
+                  Cancel
+                </button>
+               
               </div>
             </form>
           </div>
