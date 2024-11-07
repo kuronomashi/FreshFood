@@ -180,7 +180,7 @@ export default function InvoicePDF({ Order, CarInfo }: ModelOrder) {
         {/* Invoice Details */}
         <View>
           <Text style={[styles.invoiceDetails, { marginBottom: 5 }]}>
-            Factura #: {"2"}
+            Idetificador pedido: {Order.id}
           </Text>
           <Text style={[styles.invoiceDetails, { marginBottom: 5 }]}>
             Fecha: {formattedDate}

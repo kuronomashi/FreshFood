@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, ArrowLeft } from 'lucide-react';
-import { collection, addDoc } from 'firebase/firestore';
-import { Db} from '../Firebase';
-import { ProductoSinID } from '../Interfaces/InterfacesDeProfuctos';
+import { ArrowUpIcon, ArrowLeft } from 'lucide-react';
+import { collection, addDoc,updateDoc} from 'firebase/firestore';
+import { Db } from '../Firebase';
+import { ProductoInt } from '../Interfaces/InterfacesDeProfuctos';
 
 export default function AddProduct() {
   const navigate = useNavigate();
-  const [product, setProduct] = useState<ProductoSinID>({ 
+  const [product, setProduct] = useState<ProductoInt>({
+    id: '',
     name: '',
     category: '',
     description: '',
@@ -19,12 +20,12 @@ export default function AddProduct() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    try {
-      // Agregar producto a Firestore
-      const productsCollection = collection(Db, 'productos');
-      await addDoc(productsCollection, product);
 
+    try {
+      const productsCollection = collection(Db, 'productos');
+      const docRef = await addDoc(productsCollection, product);
+      const generatedId = docRef.id;
+      await updateDoc(docRef, { id: generatedId });
       alert('Producto agregado exitosamente.');
       navigate('/ '); // Redirigir después de agregar el producto
     } catch (error) {
@@ -40,7 +41,7 @@ export default function AddProduct() {
         className="flex items-center text-gray-600 hover:text-gray-900 mb-6"
       >
         <ArrowLeft className="h-5 w-5 mr-2" />
-        Back to Dashboard
+        Volver
       </button>
 
       <div className="bg-white rounded-lg shadow-lg p-6">
@@ -50,31 +51,36 @@ export default function AddProduct() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Product Name
+                Nombre del producto
               </label>
               <input
                 type="text"
                 required
-                value={product.name}
-                onChange={(e) => setProduct({ ...product, name: e.target.value })}
+                value={product.name || ''}
+                onChange={(e) => {
+                  const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/; // Permite letras, espacios y tildes
+                  if (regex.test(e.target.value) && e.target.value.length <= 30) {
+                    setProduct({ ...product, name: e.target.value });
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
+                Categoria
               </label>
               <select
                 required
-                value={product.category}
+                value={product.category || ''}
                 onChange={(e) => setProduct({ ...product, category: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               >
-                <option value="">Select category</option>
-                <option value="Fruits">Fruits</option>
-                <option value="Vegetables">Vegetables</option>
-                <option value="Dairy">Cereales</option>
+                <option value="">Categoria</option>
+                <option value="Frutas">Frutas</option>
+                <option value="Vegetales">Vegetales</option>
+                <option value="Otros">Otro</option>
               </select>
             </div>
 
@@ -85,7 +91,11 @@ export default function AddProduct() {
               <textarea
                 required
                 value={product.description}
-                onChange={(e) => setProduct({ ...product, description: e.target.value })}
+                onChange={(e) => {
+                  if (e.target.value.length <= 100) {
+                    setProduct({ ...product, description: e.target.value });
+                  }
+                }}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               />
@@ -93,47 +103,67 @@ export default function AddProduct() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Price ($)
+                Precio ($)
               </label>
               <input
                 type="number"
-                step="0.01"
                 required
                 value={product.price}
-                onChange={(e) => setProduct({ ...product, price: parseFloat(e.target.value) })}
+                min="0.01"
+                max="9999"
+                step="0.01"
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                    setProduct({ ...product, price: value });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Stock Quantity
+                Cantidad Stock
               </label>
               <input
                 type="number"
                 required
                 value={product.stock}
-                onChange={(e) => setProduct({ ...product, stock: parseInt(e.target.value) })}
+                min="1"
+                max="999"
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                    setProduct({ ...product, stock: value });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Expiry Date
+                Fecha de Expiracion
               </label>
               <input
                 type="date"
-                required
-                value={product.expiryDate}
-                onChange={(e) => setProduct({ ...product, expiryDate: e.target.value })}
+                defaultValue={product.expiryDate}
+                min={new Date().toISOString().split('T')[0]}
+                max={new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString().split('T')[0]}
+                onChange={(e) => {
+                  const selectedDate = e.target.value;
+                  const today = new Date().toISOString().split('T')[0];
+                  const maxDate = new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString().split('T')[0];
+                  if (selectedDate < today || selectedDate > maxDate) {
+                    console.log("Fecha fuera de rango");
+                  } else {
+                    setProduct({ ...product, expiryDate: selectedDate });
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Image URL
+                Imagen Url
               </label>
               <div className="flex">
                 <input
@@ -144,13 +174,6 @@ export default function AddProduct() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   placeholder="https://example.com/image.jpg"
                 />
-                <button
-                  type="button"
-                  className="px-4 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-200"
-                  onClick={() => window.open(product.Imagen, '_blank')}
-                >
-                  <Upload className="h-5 w-5 text-gray-600" />
-                </button>
               </div>
             </div>
           </div>
@@ -176,9 +199,9 @@ export default function AddProduct() {
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              className="font-bold px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
-              Add Product
+              Añadir Producto
             </button>
           </div>
         </form>

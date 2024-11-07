@@ -31,22 +31,22 @@ export default function AdminDashboard() {
 
   const stats = [
     { label: 'Total de los productos', value: totalProducts, icon: Package },
-    { label: 'Low Stock Items', value: lowStockProducts.length, icon: ShoppingBag },
-    { label: 'Expiring Soon', value: expiringSoonProducts.length, icon: AlertTriangle }
+    { label: 'Productos con bajo stock', value: lowStockProducts.length, icon: ShoppingBag },
+    { label: 'Expiran pronto', value: expiringSoonProducts.length, icon: AlertTriangle }
   ];
 
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center  mb-8">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold">Panel de Control</h1>
         <div className="flex items-center space-x-2 font-bold">
           <Link
             to="/admin/pedidos"
             className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
           >
             <BoxIcon className="h-5 w-5" />
-            <span>Admin Order</span>
+            <span>Pedidos </span>
           </Link>
 
           <Link
@@ -54,14 +54,14 @@ export default function AdminDashboard() {
             className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
           >
             <Key className="h-5 w-5" />
-            <span>Admin Inventory</span>
+            <span>Inventario</span>
           </Link>
           <Link
             to="/admin/products/new"
             className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
           >
             <Plus className="h-5 w-5" />
-            <span>Add New Product</span>
+            <span>Añadir Producto</span>
           </Link>
         </div>
 
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Low Stock Alerts</h2>
+          <h2 className="text-xl font-semibold mb-4">Productos con Bajo Stock</h2>
           <div className="space-y-4">
             <div className="space-y-4">
               {lowStockProducts.length > 0 ? (
@@ -95,21 +95,21 @@ export default function AdminDashboard() {
                     <div>
                       <h3 className="font-medium">{producto.name}</h3>
                       {producto.stock > 0 ? (
-                        <p className="text-sm text-gray-600">Only {producto.stock} units remaining</p>
+                        <p className="text-sm text-gray-600">Queda {producto.stock} productos</p>
                       ) : (
-                        <p className="text-sm text-red-600">Out of stock</p>
+                        <p className="text-sm text-red-600">No quedan productos</p>
                       )}
                     </div>
                     <Link
                       to="/admin/inventory"
                       className={`text-${producto.stock < 5 ? 'red' : 'yellow'}-600 hover:text-${producto.stock < 5 ? 'red' : 'yellow'}-800`}
                     >
-                      Update Stock
+                      Actualizar Stock
                     </Link>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-600">No low stock products available.</p>
+                <p className="text-gray-600">No hay productos con bajo Stock</p>
               )}
             </div>
 
@@ -117,13 +117,12 @@ export default function AdminDashboard() {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Expiring Products</h2>
+          <h2 className="text-xl font-semibold mb-4">Pructos a Expirar</h2>
           <div className="space-y-4">
             {expiringSoonProducts.length > 0 ? (
               expiringSoonProducts.map(producto => {
                 const expirationDate = new Date(producto.expiryDate);
                 const daysLeft = Math.ceil((expirationDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                console.log("Days Left:", daysLeft);
                 return (
                   <div key={producto.id} className={`flex items-center justify-between p-4 ${producto.stock < 5 ? 'bg-red-50' : 'bg-orange-50'} rounded-md`}>
                     <div>
@@ -143,13 +142,13 @@ export default function AdminDashboard() {
                       to="/admin/inventory"
                       className={`text-${daysLeft < 5 ? 'red' : 'orange'}-600 hover:text-${daysLeft < 5 ? 'red' : 'orange'}-800`}
                     >
-                      Mark as Sold
+                      Actualizar Producto
                     </Link>
                   </div>
                 );
               })
             ) : (
-              <p className="text-gray-600">No expiring products available.</p>
+              <p className="text-gray-600">No hay productos a expirar</p>
             )}
           </div>
         </div>

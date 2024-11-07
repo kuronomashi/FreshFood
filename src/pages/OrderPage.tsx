@@ -99,7 +99,7 @@ export default function OrderPage() {
       }
       alert('Order submitted:');
       GuardarPedidos();
-      CrearPdf(); 
+      CrearPdf();
     } catch (error) {
       console.error("Error al actualizar el stock de los productos:", error);
     }
@@ -107,10 +107,11 @@ export default function OrderPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle order submission
+    // Handle order submissi
+    console.log(items.length != 0)
     if (items.length != 0) {
       CambiarStock(items);
-    }else{
+    } else {
       alert("Porfavor seleccione un producto");
     }
 
@@ -145,23 +146,24 @@ export default function OrderPage() {
 
 
   const CrearPdf = async () => {
+    deliveryInfo.id = product.id
     const blob = await pdf(<PdfGenrate Order={deliveryInfo} CarInfo={items} />).toBlob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'Resumen de Factura.pdf';
+    link.download = `Resumen de Factura (${deliveryInfo.id}).pdf`;
     link.click();
     URL.revokeObjectURL(url); // Limpiar la URL después de la descarga
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold mb-8">Your Order</h1>
+      <h1 className="text-3xl font-bold mb-8">Tu Orden</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Cart Items */}
         <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Cart Items</h2>
+          <h2 className="text-xl font-semibold mb-4">Items en la Cesta</h2>
           {items.length === 0 ? (
             <p className="text-gray-500">No tienes productos</p>
           ) : (
@@ -210,34 +212,53 @@ export default function OrderPage() {
         <div className="bg-white p-6 rounded-lg shadow">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-4">Delivery Information</h2>
+              <h2 className="text-xl font-semibold mb-4">Infomacion de envio</h2>
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Name</label>
+                  <label className="block text-sm font-medium text-gray-700">Nombre</label>
                   <input
                     type="text"
                     required
                     value={deliveryInfo.name}
-                    onChange={(e) => setDeliveryInfo({ ...deliveryInfo, name: e.target.value })}
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+                      // Permitir solo letras y hasta 20 caracteres
+                      if (/^[a-zA-ZáéíóúÁÉÍÓÚ\s]*$/.test(newValue) && newValue.length <= 40) {
+                        setDeliveryInfo({ ...deliveryInfo, name: newValue });
+                      }
+                    }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Phone</label>
+                  <label className="block text-sm font-medium text-gray-700">Telefono</label>
                   <input
-                    type="tel"
+                    type="text"
                     required
                     value={deliveryInfo.phone}
-                    onChange={(e) => setDeliveryInfo({ ...deliveryInfo, phone: e.target.value })}
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+                      // Permitir solo números hasta que alcancen exactamente 10 dígitos
+                      if (/^\d{0,10}$/.test(newValue)) {
+                        setDeliveryInfo({ ...deliveryInfo, phone: newValue });
+                      }
+                    }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Address</label>
-                  <textarea
+                  <label className="block text-sm font-medium text-gray-700">Dirección</label>
+                  <input
+                    type="text"
                     required
                     value={deliveryInfo.address}
-                    onChange={(e) => setDeliveryInfo({ ...deliveryInfo, address: e.target.value })}
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+                      // Permitir solo letras, números, espacios, y algunos caracteres especiales, hasta un máximo de 10 caracteres
+                      if (/^[a-zA-Z0-9\s.,#-]*$/.test(newValue) && newValue.length <= 25) {
+                        setDeliveryInfo({ ...deliveryInfo, address: newValue });
+                      }
+                    }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                   />
                 </div>
@@ -245,27 +266,47 @@ export default function OrderPage() {
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold mb-4">Payment Information</h2>
+              <h2 className="text-xl font-semibold mb-4">Informacion de Pago</h2>
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Card Number</label>
+                  <label className="block text-sm font-medium text-gray-700">Numero de la Tarjeta</label>
                   <input
                     type="text"
                     required
                     value={paymentInfo.cardNumber}
-                    onChange={(e) => setPaymentInfo({ ...paymentInfo, cardNumber: e.target.value })}
+                    onChange={(e) => {
+                      let newValue = e.target.value.replace(/\D/g, ""); // Eliminar cualquier carácter no numérico
+                      newValue = newValue.replace(/(\d{4})(?=\d)/g, "$1 "); // Agregar un espacio cada 4 dígitos
+                  
+                      if (newValue.length <= 19) { // Limitar la entrada a 19 caracteres (16 dígitos + 3 espacios)
+                        setPaymentInfo({ ...paymentInfo, cardNumber: newValue });
+                      }
+                    }}
+                    placeholder="0000 0000 0000 0000"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Expiry Date</label>
+                    <label className="block text-sm font-medium text-gray-700">Fecha de Expiracion</label>
                     <input
                       type="text"
                       placeholder="MM/YY"
                       required
                       value={paymentInfo.expiryDate}
-                      onChange={(e) => setPaymentInfo({ ...paymentInfo, expiryDate: e.target.value })}
+                      onChange={(e) => {
+                        let newValue = e.target.value.replace(/\D/g, ""); // Eliminar caracteres no numéricos
+                    
+                        // Limitar la longitud a 4 caracteres (2 para el mes y 2 para el año)
+                        if (newValue.length <= 4) {
+                          // Formatear el valor como MM/YY
+                          if (newValue.length >= 3) {
+                            newValue = newValue.slice(0, 2) + "/" + newValue.slice(2, 4); // Insertar barra
+                          }
+                          setPaymentInfo({ ...paymentInfo, expiryDate: newValue });
+                        }
+                      }}
+                      
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                     />
                   </div>
@@ -275,7 +316,16 @@ export default function OrderPage() {
                       type="text"
                       required
                       value={paymentInfo.cvv}
-                      onChange={(e) => setPaymentInfo({ ...paymentInfo, cvv: e.target.value })}
+                      onChange={(e) => {
+                        const newValue = e.target.value.replace(/\D/g, ""); // Eliminar cualquier carácter no numérico
+                        // Limitar la longitud a 3 dígitos
+                        if (newValue.length <= 3) {
+                          setPaymentInfo({ ...paymentInfo, cvv: newValue });
+                        }
+                      
+                      }}
+                      placeholder="000"
+
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                     />
                   </div>
@@ -285,9 +335,9 @@ export default function OrderPage() {
 
             <button
               type="submit"
-              className="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              className="font-bold text-lg w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
-              Place Order
+              Realizar Pedido
             </button>
 
           </form>

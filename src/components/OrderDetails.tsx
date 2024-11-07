@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Package, ShoppingCart, User, Phone, Mail, MapPin, Trash } from 'lucide-react';
+import { Package, ShoppingCart, User, Phone, Mail, MapPin, Trash, Save } from 'lucide-react';
 import { Pedidos } from '../Interfaces/InterfacesDeProfuctos';
-import { collection, getDocs ,updateDoc, doc,deleteDoc} from 'firebase/firestore';
-import { Db,auth} from '../Firebase';
+import { collection, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { Db, auth } from '../Firebase';
 import { useNavigate } from 'react-router-dom';
+import PdfGenrate from '../components/PdfOrder';
+import { pdf } from '@react-pdf/renderer';
+
 
 interface OrderDetailsProps {
     order: Pedidos;
@@ -17,38 +20,61 @@ export default function OrderDetails({ order }: OrderDetailsProps) {
 
     const handleDelete = async (id: string) => {
         const productDoc = doc(Db, 'Pedidos', id);
-        await deleteDoc(productDoc); 
-        setProducts(products.filter(product => product.id !== id)); 
+        await deleteDoc(productDoc);
+        setProducts(products.filter(product => product.id !== id));
         navigate("/admin");
+    };
+
+    const CrearPdf = async () => {
+        const blob = await pdf(<PdfGenrate Order={order} CarInfo={order.productos} />).toBlob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Resumen de Factura (${order.id}).pdf`;
+        link.click();
+        URL.revokeObjectURL(url); // Limpiar la URL después de la descarga
       };
 
     return (
         <div className="space-y-8">
             {/* Customer Information Card */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-                <div className='flex justify-between'>
-                <h2 className="flex text-2xl font-bold text-gray-800 mb-6">Detalles del Comprador</h2>
-                <button
-                    onClick={() => {handleDelete(order.id)}}
-                    className="flex text-red-600 hover:text-red-900mr-6 hover:text-red-900 mr-6 transform transition-transform duration-200 hover:scale-110 "
-                >
-                    <Trash className="mr-1" />
-                </button>
+                <div className='flex justify-between items-center'>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Detalles del Comprador</h2>
+                    <div className="flex ml-auto">
+                        <button
+                            onClick={() => { CrearPdf()}}
+                            className="text-green-600 hover:text-green-900 mr-4 transform transition-transform duration-200 hover:scale-110"
+                        >
+                            <Save className="mr-1" />
+                        </button>
+                        <button
+                            onClick={() => { handleDelete(order.id) }}
+                            className="text-red-600 hover:text-red-900 mr-6 transform transition-transform duration-200 hover:scale-110"
+                        >
+                            <Trash className="mr-1" />
+                        </button>
+                    </div>
                 </div>
-               
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="flex items-center space-x-3">
-                        <User className="w-5 h-5 text-emerald-600" />
+                        <div>
+                            <User className="w-5 h-5 text-emerald-600" />
+                        </div>
                         <div>
                             <p className="text-sm text-gray-500">Nombre</p>
                             <p className="font-medium">{order.name}</p>
                         </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                        <Mail className="w-5 h-5 text-emerald-600" />
                         <div>
+                            <Mail className="w-5 h-5 text-emerald-600" />
+                        </div>
+                        <div className="w-full">
                             <p className="text-sm text-gray-500">Email</p>
-                            <p className="font-medium ">{order.email}</p>
+                            <p className="font-medium truncate hover:overflow-visible hover:whitespace-normal hover:break-words">
+                                {order.email}</p>
                         </div>
                     </div>
                     <div className="flex items-center space-x-3">
@@ -72,10 +98,10 @@ export default function OrderDetails({ order }: OrderDetailsProps) {
             {/* Order Summary */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">Orden</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">Lista de productos</h2>
                     <div className="flex items-center space-x-2">
                         <ShoppingCart className="w-5 h-5 text-emerald-600" />
-                        <span className="text-sm font-medium text-gray-600">{totalItems} items</span>
+                        <span className="text-sm font-medium text-gray-600">{totalItems} Productos</span>
                     </div>
                 </div>
 
@@ -92,12 +118,12 @@ export default function OrderDetails({ order }: OrderDetailsProps) {
                                 </div>
                                 <div>
                                     <h3 className="font-medium text-gray-800">{item.name}</h3>
-                                    <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
+                                    <p className="text-sm text-gray-500">Cantidad: {item.quantity}</p>
                                 </div>
                             </div>
                             <div className="text-right">
                                 <p className="font-medium text-gray-800">${(item.price * item.quantity).toFixed(2)}</p>
-                                <p className="text-sm text-gray-500">${item.price.toFixed(2)} price</p>
+                                <p className="text-sm text-gray-500">${item.price.toFixed(2)} Precio</p>
                             </div>
                         </div>
                     ))}
@@ -107,8 +133,8 @@ export default function OrderDetails({ order }: OrderDetailsProps) {
                 <div className="mt-6 pt-6 border-t border-gray-200">
                     <div className="flex justify-between items-center">
                         <div>
-                            <p className="text-lg font-semibold text-gray-800">Total Amount</p>
-                            <p className="text-sm text-gray-500">Including all items</p>
+                            <p className="text-lg font-semibold text-gray-800">Importe total</p>
+                            <p className="text-sm text-gray-500">Incluyendo todos los artículos</p>
                         </div>
                         <p className="text-2xl font-bold text-emerald-600">${totalAmount.toFixed(2)}</p>
                     </div>

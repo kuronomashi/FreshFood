@@ -23,7 +23,6 @@ export default function AdminInventory() {
         const productSnapshot = await getDocs(productCollection);
         const Pedioslist: Pedidos[] = productSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Pedidos));
         setProducts(Pedioslist);
-        console.log(Pedid);
       } catch (error) {
         setError((error as Error).message);
       }

@@ -6,6 +6,10 @@ export default function Footer() {
     <footer className="bg-green-800 text-white">
       <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <div className="flex flex-col justify-center">
+            <h3 className="font-bold text-4xl font-semibold mb-4">Fresh Food</h3>
+          </div>
           <div>
             <h3 className="text-lg font-semibold mb-4">Contactanos</h3>
             <div className="space-y-3">
@@ -15,28 +19,25 @@ export default function Footer() {
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="h-5 w-5" />
-                <span>correodeejemplo@ecci.edu.co</span>
+                <span>davida.rinconc@ecci.edu.co</span>
               </div>
               <div className="flex items-center space-x-2">
                 <MapPin className="h-5 w-5" />
-                <span>123 Fresh Street, Food City</span>
+                <span>Cra. 79 #42 B, Bogotá</span>
               </div>
             </div>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4">Business Hours</h3>
+            <h3 className="text-lg font-semibold mb-4">Horario</h3>
             <div className="space-y-2">
-              <p>Monday - Friday: 8:00 AM - 6:00 PM</p>
-              <p>Saturday: 9:00 AM - 4:00 PM</p>
-              <p>Sunday: Closed</p>
+              <p>Lunes - Viernes: 8:00 AM - 6:00 PM</p>
+              <p>Sabados: 9:00 AM - 4:00 PM</p>
+              <p>Domingo: Closed</p>
             </div>
           </div>
 
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Newsletter</h3>
-            <p className="mb-4">Subscribe to get updates on fresh products and special offers!</p>
-          </div>
+          
         </div>
 
         <div className="mt-8 pt-8 border-t border-green-700">
