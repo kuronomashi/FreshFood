@@ -5,19 +5,61 @@ import { Db, auth } from '../Firebase';
 import { ProductoInt } from '../Interfaces/InterfacesDeProfuctos';
 import { Trash2, Pen, Save } from 'lucide-react';
 import { parseISO } from 'date-fns';
+import { AlertType } from '../components/Alert';
+import { AlertContainer } from '../components/AlertContainer';
+import { ConfirmationAlert } from '../components/ConfirmationAlert';
+
+
+interface AlertItem {
+  id: string; 
+  type: AlertType;
+  title: string;
+  message: string;
+}
 
 export default function AdminInventory() {
-
-
   const [products, setProducts] = useState<ProductoInt[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
-
   const [tempStock, setTempStock] = useState<number | null>(null);
   const [tempPrice, setTempPrice] = useState<number | null>(null);
+  const [tempCategory,setTempCategory] = useState<string | null>(null);
   const [tempExpiry, setTempExpiry] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [IdProdcutoActual, Setidproductoactual] = useState<string>("")
 
+  const addAlert = (type: AlertType, title: string, message: string) => {
+    const newAlert = {
+      id: Date.now().toString(),
+      type,
+      title,
+      message,
+    };
+    setAlerts((prev) => [...prev, newAlert]);
+    setTimeout(() => removeAlert(newAlert.id), 5000);
+  };
+  const removeAlert = (id: string) => {
+    setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+  };
 
+  const handleConfirmPurchase = () => {
+    setIsPurchaseModalOpen(false)
+    addAlert(
+      'success',
+      'Eliminacion realizada',
+      'Espero agregues mas productos pronto'
+    );
+    handleDelete(IdProdcutoActual)
+  };
+  const handleCancelPurchase = () => {
+    setIsPurchaseModalOpen(false);
+    addAlert(
+      'info',
+      'Eliminacion Cancelada',
+      'Es bueno que no hayas borrado nada por equivocacion'
+    );
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -41,23 +83,25 @@ export default function AdminInventory() {
     fetchProducts();
   }, []);
 
-  const handleSave = async (id: string) => {
+  const handleSave = async (id: string ) => {
     const productDoc = doc(Db, 'productos', id);
-
     if (tempStock !== null) await updateDoc(productDoc, { stock: tempStock });
     if (tempPrice !== null) await updateDoc(productDoc, { price: tempPrice });
-    if (tempExpiry !== null) await updateDoc(productDoc, { expiryDate: tempExpiry });
+    if (tempCategory !== null) await updateDoc(productDoc, { category: tempCategory });
+    if (tempExpiry !== null) await updateDoc(productDoc, { cate: tempExpiry });
 
     setProducts(products.map(p =>
       p.id === id ? {
         ...p, stock: tempStock !== null ? tempStock : p.stock,
         price: tempPrice !== null ? tempPrice : p.price,
-        expiryDate: tempExpiry !== null ? tempExpiry : p.expiryDate
+        expiryDate: tempExpiry !== null ? tempExpiry : p.expiryDate,
+        category: tempCategory !== null ? tempCategory : p.category
       } : p
     ));
 
     setEditingId(null);
     setTempStock(null);
+    setTempCategory(null);
     setTempPrice(null);
     setTempExpiry(null);
   };
@@ -81,6 +125,14 @@ export default function AdminInventory() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <AlertContainer alerts={alerts} onDismiss={removeAlert} />
+      <ConfirmationAlert
+          title = "Eliminar Producto"
+          message= "Estas seguro de eliminar este producto?"
+          isOpen= {isPurchaseModalOpen}
+          onConfirm={handleConfirmPurchase}
+          onCancel={handleCancelPurchase}
+        />
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Administracion de Inventario</h1>
         <div className="flex space-x-4">
@@ -125,9 +177,24 @@ export default function AdminInventory() {
                   <div className="text-sm font-medium text-gray-900">{product.name}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                {editingId === product.id ? (
+                    <div className="relative">
+                    <select
+                      defaultValue={product.category}
+                      onChange={(e) => setTempCategory(e.target.value)}
+                      className="block w-28 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                    >
+                      <option value="Frutas">Frutas</option>
+                      <option value="Vegetales">Vegetales</option>
+                      <option value="Otros">Otros</option>
+                    </select>
+                  </div>
+                  ) : (
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                     {product.category}
                   </span>
+                  )}
+                  
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {editingId === product.id ? (
@@ -138,7 +205,7 @@ export default function AdminInventory() {
                       max="999"
                       onChange={(e) => {
                         const value = parseInt(e.target.value, 10);
-                        if (value <= 999 && value >= 0) {
+                        if (value <= 999 && value > 0) {
                           setTempStock(value);
                         }
                       }}
@@ -183,7 +250,7 @@ export default function AdminInventory() {
                       step="0.01"
                       onChange={(e) => {
                         const value = parseFloat(e.target.value);
-                        if (value <= 9999 && value >= 0) {
+                        if (value <= 9999 && value > 0) {
                           setTempPrice(value);
                         }
                       }}
@@ -212,9 +279,7 @@ export default function AdminInventory() {
                         <Pen className="mr-1" />
                       </button>
                       <button
-                        onClick={() => {
-                          alert(`Producto eliminado: ${product.name}`), handleDelete(product.id)
-                        }}
+                        onClick={() => {setIsPurchaseModalOpen(true),Setidproductoactual(product.id)}}
                         className="text-red-600 hover:text-red-900mr-6"
                       >
                         <Trash2 className="mr-1" />

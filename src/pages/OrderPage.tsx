@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef,useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { pdf } from '@react-pdf/renderer';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +8,17 @@ import { collection, addDoc, updateDoc, getDoc, doc } from 'firebase/firestore';
 import { Db } from '../Firebase';
 import { Eraser } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { AlertType } from '../components/Alert';
+import { AlertContainer } from '../components/AlertContainer';
+import { PurchaseConfirmation } from '../components/PurchaseConfirmation';
+
+
+interface AlertItem {
+  id: string; 
+  type: AlertType;
+  title: string;
+  message: string;
+}
 
 interface DeliveryInfo {
   name: string;
@@ -27,6 +38,9 @@ export default function OrderPage() {
   const { user } = useAuth();
   const [products, setProducts] = useState<ProductoInt[]>([]);
   const { items, total, updateQuantity, removeItem, clearCart } = useCart();
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [prossesPay, setBotonDeCompra] = useState(false);
 
   const [deliveryInfo, setDeliveryInfo] = useState<Pedidos>({
     id: '',
@@ -43,6 +57,54 @@ export default function OrderPage() {
     cvv: ''
   });
 
+
+  useEffect(() => {
+    const savedDeliveryInfo = localStorage.getItem("deliveryInfo");
+    const savedPaymentInfo = localStorage.getItem("paymentInfo");
+
+    if (savedDeliveryInfo) setDeliveryInfo(JSON.parse(savedDeliveryInfo));
+    if (savedPaymentInfo) setPaymentInfo(JSON.parse(savedPaymentInfo));
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("deliveryInfo", JSON.stringify(deliveryInfo));
+  }, [deliveryInfo]);
+
+  useEffect(() => {
+    localStorage.setItem("paymentInfo", JSON.stringify(paymentInfo));
+  }, [paymentInfo]);
+
+
+  const addAlert = (type: AlertType, title: string, message: string) => {
+    const newAlert = {
+      id: Date.now().toString(),
+      type,
+      title,
+      message,
+    };
+    setAlerts((prev) => [...prev, newAlert]);
+    setTimeout(() => removeAlert(newAlert.id), 5000);
+  };
+  const removeAlert = (id: string) => {
+    setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+  };
+
+  const handleConfirmPurchase = () => {
+    setBotonDeCompra(true)
+    addAlert(
+      'success',
+      '¡Compra exitosa!',
+      'Tu pedido ha sido procesado correctamente.'
+    );
+    CambiarStock(items);
+  };
+  const handleCancelPurchase = () => {
+    setIsPurchaseModalOpen(false);
+    addAlert(
+      'info',
+      'Compra cancelada',
+      'Has cancelado la compra. ¡Te esperamos pronto!'
+    );
+  };
   const today = new Date();
   const formattedDate = today.toLocaleDateString('es-ES', {
     year: 'numeric',
@@ -74,7 +136,11 @@ export default function OrderPage() {
           const product = productSnap.data();
           const updatedStock = product.stock - item.quantity;
           if (updatedStock < 0) {
-            alert("No hay suficiente stock");
+            addAlert(
+              'info',
+              'No hay suficiente stock',
+              'Lamentamos las molestias, porfavor revise de nuevo su carrito'
+            );
             clearCart();
             navigate("/");
             return;
@@ -97,9 +163,10 @@ export default function OrderPage() {
           );
         }
       }
-      alert('Order submitted:');
       GuardarPedidos();
       CrearPdf();
+      setIsPurchaseModalOpen(false);
+      setBotonDeCompra(false)
     } catch (error) {
       console.error("Error al actualizar el stock de los productos:", error);
     }
@@ -107,12 +174,14 @@ export default function OrderPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle order submissi
-    console.log(items.length != 0)
     if (items.length != 0) {
-      CambiarStock(items);
+      setIsPurchaseModalOpen(true);
     } else {
-      alert("Porfavor seleccione un producto");
+      addAlert(
+        'error',
+        'No tiene productos seleccionados',
+        'Porfavor seleccione un producto'
+      );
     }
 
   };
@@ -129,21 +198,15 @@ export default function OrderPage() {
     product.productos = items;
     product.date = formattedDate + " - " + formattedTime;
     try {
-      // Agregar producto a Firestore
       const productsCollection = collection(Db, 'Pedidos');
       const docRef = await addDoc(productsCollection, product);
       const generatedId = docRef.id;
       await updateDoc(docRef, { id: generatedId });
-      alert('Producto agregado exitosamente.');
       clearCart();
-      navigate('/ '); // Redirigir después de agregar el producto
     } catch (error) {
       console.error('Error al agregar el producto:', error);
-      alert('Hubo un error al agregar el producto.');
     }
   };
-
-
 
   const CrearPdf = async () => {
     deliveryInfo.id = product.id
@@ -153,11 +216,21 @@ export default function OrderPage() {
     link.href = url;
     link.download = `Resumen de Factura (${deliveryInfo.id}).pdf`;
     link.click();
-    URL.revokeObjectURL(url); // Limpiar la URL después de la descarga
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <AlertContainer alerts={alerts} onDismiss={removeAlert} />
+      <PurchaseConfirmation
+          product={deliveryInfo}
+          cantidad={items.length}
+          process={prossesPay}
+          total={total}
+          isOpen= {isPurchaseModalOpen}
+          onConfirm={handleConfirmPurchase}
+          onCancel={handleCancelPurchase}
+        />
       <h1 className="text-3xl font-bold mb-8">Tu Orden</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -181,11 +254,10 @@ export default function OrderPage() {
                       value={item.quantity}
                       onChange={(e) => {
                         const value = parseInt(e.target.value);
-                        // Si el valor ingresado es mayor que el stock, ajustamos a stock disponible
                         if (value <= item.stock) {
                           updateQuantity(item.id, value);
                         } else {
-                          updateQuantity(item.id, item.stock); // Restablecer al stock disponible si es mayor
+                          updateQuantity(item.id, item.stock); 
                         }
                       }}
                       className="w-20 px-2 py-1 border rounded"
@@ -222,9 +294,13 @@ export default function OrderPage() {
                     value={deliveryInfo.name}
                     onChange={(e) => {
                       const newValue = e.target.value;
-                      // Permitir solo letras y hasta 20 caracteres
                       if (/^[a-zA-ZáéíóúÁÉÍÓÚ\s]*$/.test(newValue) && newValue.length <= 40) {
                         setDeliveryInfo({ ...deliveryInfo, name: newValue });
+                      }
+                    }}
+                    onBlur={() => {
+                      if (deliveryInfo.name.length < 3) {
+                        setDeliveryInfo({ ...deliveryInfo, name: "" }); 
                       }
                     }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -238,9 +314,13 @@ export default function OrderPage() {
                     value={deliveryInfo.phone}
                     onChange={(e) => {
                       const newValue = e.target.value;
-                      // Permitir solo números hasta que alcancen exactamente 10 dígitos
                       if (/^\d{0,10}$/.test(newValue)) {
                         setDeliveryInfo({ ...deliveryInfo, phone: newValue });
+                      }
+                    }}
+                    onBlur={() => {
+                      if (deliveryInfo.phone.length !== 10) {
+                        setDeliveryInfo({ ...deliveryInfo, phone: "" }); 
                       }
                     }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -254,7 +334,6 @@ export default function OrderPage() {
                     value={deliveryInfo.address}
                     onChange={(e) => {
                       const newValue = e.target.value;
-                      // Permitir solo letras, números, espacios, y algunos caracteres especiales, hasta un máximo de 10 caracteres
                       if (/^[a-zA-Z0-9\s.,#-]*$/.test(newValue) && newValue.length <= 25) {
                         setDeliveryInfo({ ...deliveryInfo, address: newValue });
                       }
@@ -275,11 +354,17 @@ export default function OrderPage() {
                     required
                     value={paymentInfo.cardNumber}
                     onChange={(e) => {
-                      let newValue = e.target.value.replace(/\D/g, ""); // Eliminar cualquier carácter no numérico
-                      newValue = newValue.replace(/(\d{4})(?=\d)/g, "$1 "); // Agregar un espacio cada 4 dígitos
+                      let newValue = e.target.value.replace(/\D/g, ""); 
+                      newValue = newValue.replace(/(\d{4})(?=\d)/g, "$1 "); 
                   
-                      if (newValue.length <= 19) { // Limitar la entrada a 19 caracteres (16 dígitos + 3 espacios)
+                      if (newValue.length <= 19) { 
                         setPaymentInfo({ ...paymentInfo, cardNumber: newValue });
+                      }
+                    }}
+                    onBlur={() => {
+                      const onlyDigits = paymentInfo.cardNumber.replace(/\s/g, ""); 
+                      if (onlyDigits.length !== 16) {
+                        setPaymentInfo({ ...paymentInfo, cardNumber: "" }); 
                       }
                     }}
                     placeholder="0000 0000 0000 0000"
@@ -295,18 +380,19 @@ export default function OrderPage() {
                       required
                       value={paymentInfo.expiryDate}
                       onChange={(e) => {
-                        let newValue = e.target.value.replace(/\D/g, ""); // Eliminar caracteres no numéricos
-                    
-                        // Limitar la longitud a 4 caracteres (2 para el mes y 2 para el año)
+                        let newValue = e.target.value.replace(/\D/g, "");
                         if (newValue.length <= 4) {
-                          // Formatear el valor como MM/YY
                           if (newValue.length >= 3) {
-                            newValue = newValue.slice(0, 2) + "/" + newValue.slice(2, 4); // Insertar barra
+                            newValue = newValue.slice(0, 2) + "/" + newValue.slice(2, 4); 
                           }
                           setPaymentInfo({ ...paymentInfo, expiryDate: newValue });
                         }
                       }}
-                      
+                      onBlur={() => {
+                        if (paymentInfo.expiryDate.length !== 5) {
+                          setPaymentInfo({ ...paymentInfo, expiryDate: "" }); 
+                        }
+                      }}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                     />
                   </div>
@@ -317,12 +403,15 @@ export default function OrderPage() {
                       required
                       value={paymentInfo.cvv}
                       onChange={(e) => {
-                        const newValue = e.target.value.replace(/\D/g, ""); // Eliminar cualquier carácter no numérico
-                        // Limitar la longitud a 3 dígitos
+                        const newValue = e.target.value.replace(/\D/g, "");
                         if (newValue.length <= 3) {
                           setPaymentInfo({ ...paymentInfo, cvv: newValue });
                         }
-                      
+                      }}
+                      onBlur={() => {
+                        if (paymentInfo.cvv.length !== 3) {
+                          setPaymentInfo({ ...paymentInfo, cvv: "" }); 
+                        }
                       }}
                       placeholder="000"
 
