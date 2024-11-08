@@ -40,7 +40,7 @@ export default function AdminInventory() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center mb-8">
-      <h1 className="text-3xl font-bold">Admin Order</h1>
+      <h1 className="text-3xl font-bold">Administracion Pedido</h1>
       <div className="flex items-center space-x-2 font-bold">
       <Link
           to = "/admin"
@@ -67,7 +67,7 @@ export default function AdminInventory() {
               <OrderDetails order={selectedOrder} />
             ) : (
               <div className="bg-white rounded-2xl shadow-lg p-6 flex items-center justify-center h-48">
-                <p className="text-gray-500 text-lg">Select una orden para ver detalles</p>
+                <p className="text-gray-500 text-lg">Selecciona una orden para ver detalles</p>
               </div>
             )}
           </div>

@@ -33,7 +33,7 @@ export default function Footer() {
             <div className="space-y-2">
               <p>Lunes - Viernes: 8:00 AM - 6:00 PM</p>
               <p>Sabados: 9:00 AM - 4:00 PM</p>
-              <p>Domingo: Closed</p>
+              <p>Domingo: Cerrado</p>
             </div>
           </div>
 

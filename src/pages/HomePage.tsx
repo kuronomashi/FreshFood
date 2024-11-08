@@ -8,6 +8,19 @@ import { Db } from '../Firebase';
 import { ProductoInt } from '../Interfaces/InterfacesDeProfuctos';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { GoogleAuthProvider, signInWithPopup, getAuth, User, sendEmailVerification, sendPasswordResetEmail } from "firebase/auth";
+import { AlertType } from '../components/Alert';
+import { AlertContainer } from '../components/AlertContainer';
+import { PurchaseConfirmation } from '../components/PurchaseConfirmation';
+import { ConfirmationAlert } from '../components/ConfirmationAlert';
+
+
+
+interface AlertItem {
+  id: string; 
+  type: AlertType;
+  title: string;
+  message: string;
+}
 
 export default function HomePage() {
   const { isAuthenticated, login } = useAuth();
@@ -19,6 +32,9 @@ export default function HomePage() {
   const [products, setProducts] = useState<ProductoInt[]>([]);
   const [error, setError] = useState<string | null>(null);
   const auth = getAuth();
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -35,17 +51,58 @@ export default function HomePage() {
     fetchProducts();
   }, []);
 
+
+  const addAlert = (type: AlertType, title: string, message: string) => {
+    const newAlert = {
+      id: Date.now().toString(),
+      type,
+      title,
+      message,
+    };
+    setAlerts((prev) => [...prev, newAlert]);
+    setTimeout(() => removeAlert(newAlert.id), 5000);
+  };
+
+  const removeAlert = (id: string) => {
+    setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+  };
+
+  const handleConfirmPurchase = () => {
+    setIsPurchaseModalOpen(false);
+    addAlert(
+      'success',
+      '¡Compra exitosa!',
+      'Tu pedido ha sido procesado correctamente.'
+    );
+  };
+  const handleCancelPurchase = () => {
+    setIsPurchaseModalOpen(false);
+    addAlert(
+      'info',
+      'Compra cancelada',
+      'Has cancelado la compra. ¡Te esperamos pronto!'
+    );
+  };
+
+
   const CrearNuevoUsuario = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       await sendEmailVerification(user);
-      alert('Se envio el correo de verificacion');
+      addAlert(
+        'success',
+        'Correo de verificacion enviado',
+        'Revisa tu correo electrónico para verificar tu cuenta'
+      );
       setShowLogin(false);
     } catch (error) {
-      alert('Error al registrar el usuario');
-      console.error("Error al acceder con Google:", error);
+      addAlert(
+        'error',
+        'Error no se puede crear el nuevo usuario',
+        'Revisa que tu correo este bien escrito la contraeña debe tener minimo 6 digitos'
+      );
     }
   };
 
@@ -56,8 +113,11 @@ export default function HomePage() {
       await sendPasswordResetEmail(auth, email);
       alert('Se ha enviado un correo para restablecer la contraseña');
     } catch (error) {
-      alert('Error al intentar restablecer la contraseña');
-      console.error("Error al recuperar la contraseña:", error);
+      addAlert(
+        'error',
+        'Error no se puede retablecer la contraña',
+        'Revisa que tu correo este bien escrito'
+      );
     }
   };
 
@@ -74,7 +134,11 @@ export default function HomePage() {
         alert('Por favor verifica tu correo antes de continuar.');
       }
     } catch (error) {
-      alert('Error en el inicio de sesión:');
+      addAlert(
+        'error',
+        'Error al inicar sesion',
+        'Revisa tu correo y contraeña'
+      );
     }
   };
 
@@ -96,9 +160,9 @@ export default function HomePage() {
   const CombrobarCorreoDeAdministrador = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const correo = e.target.value;
     setEmail(e.target.value)
-    if(correo == "lovitoxz1@gmail.com"){
+    if (correo == import.meta.env.VITE_Admin1) {
       CambiarUsuarioA(true)
-    }else{
+    } else {
       CambiarUsuarioA(false)
     }
   };
@@ -114,8 +178,10 @@ export default function HomePage() {
     setSelectedCategory(event.target.value);
   };
   return (
+
     <div className="min-h-screen">
       {/* Hero Section */}
+      <AlertContainer alerts={alerts} onDismiss={removeAlert} />
       <section className="relative bg-green-600 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
@@ -146,9 +212,9 @@ export default function HomePage() {
                 className="px-2 border rounded-md"
               >
                 <option value="All">Todos</option>
-                <option value="Fruits">Frutas</option>
-                <option value="Vegetables">Vegetales</option>
-                <option value="Dairy">Otros</option>
+                <option value="Frutas">Frutas</option>
+                <option value="Vegetales">Vegetales</option>
+                <option value="Otros">Otros</option>
                 {/* Añade más opciones según tus categorías */}
               </select>
             </div>
@@ -158,7 +224,6 @@ export default function HomePage() {
 
             {filteredProducts.filter((product) => product.stock > 0).map((product) => (
               <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <h1>{product.id}</h1>
                 <img
                   src={product.Imagen}
                   alt={product.name}
@@ -167,15 +232,15 @@ export default function HomePage() {
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                    <h3 className="text-xl font-semibold break-words max-w-[250px] break-words">{product.name}</h3>
+                      <h3 className="text-xl font-semibold break-words max-w-[250px] break-words">{product.name}</h3>
                     </div>
-                   
+
                     <div>
-                    <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded">
-                      {product.category}
-                    </span>
+                      <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded">
+                        {product.category}
+                      </span>
                     </div>
-                   
+
                   </div>
                   <p className="text-gray-600 mb-4 break-words">{product.description}</p>
                   <div className="flex justify-between items-center">
@@ -202,6 +267,7 @@ export default function HomePage() {
       {showLogin && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-8 max-w-md w-full">
+          <AlertContainer alerts={alerts} onDismiss={removeAlert} />
             <h2 className="text-3xl font-bold mb-6 text-center">Login</h2>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -228,24 +294,24 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-4">
-              {!esadmin && (
-                     <div className='flex justify-between'>
-                     <button
-                       type="button"
-                       onClick={CrearNuevoUsuario}
-                       className="text-neutral-500 transition-transform duration-200 hover:scale-105"
-                     >
-                       sing up
-                     </button>
-                     <button
-                       type="button"
-                       onClick={RecuperarContraseña}
-                       className="text-neutral-500 transition-transform duration-200 hover:scale-105"
-                     >
-                       forget password?
-                     </button>
-                   </div>
-                    )}
+                {!esadmin && (
+                  <div className='flex justify-between'>
+                    <button
+                      type="button"
+                      onClick={CrearNuevoUsuario}
+                      className="text-neutral-500 transition-transform duration-200 hover:scale-105"
+                    >
+                      sing up
+                    </button>
+                    <button
+                      type="button"
+                      onClick={RecuperarContraseña}
+                      className="text-neutral-500 transition-transform duration-200 hover:scale-105"
+                    >
+                      forget password?
+                    </button>
+                  </div>
+                )}
                 <button
                   type="submit"
                   className="bg-green-600 text-xl font-bold text-white w-full py-1 rounded-md hover:bg-green-700 flex justify-center items-center border-3 border-blue-500 transition-transform duration-200 hover:scale-105"
@@ -267,7 +333,7 @@ export default function HomePage() {
                 >
                   Cancel
                 </button>
-               
+
               </div>
             </form>
           </div>
