@@ -50,7 +50,7 @@ export default function AdminDashboard() {
           </Link>
 
           <Link
-            to="/admin/inventory"
+            to="/inventory"
             className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
           >
             <Key className="h-5 w-5" />
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
                      
                     </div>
                     <Link
-                      to="/admin/inventory"
+                      to="/inventory"
                       className={`text-${daysLeft < 5 ? 'red' : 'orange'}-600 hover:text-${daysLeft < 5 ? 'red' : 'orange'}-800`}
                     >
                       Actualizar Producto

@@ -12,7 +12,6 @@ import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import { Home } from 'lucide-react';
 
 
 function App() {
@@ -25,6 +24,7 @@ function App() {
             <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<HomePage/>} />
+                
                 <Route path="/order" element={<OrderPage />} />
                 <Route
                   path="/admin"
@@ -35,7 +35,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/admin/inventory"
+                  path="/inventory"
                   element={
                     <ProtectedRoute>
                       <AdminInventory />

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowUpIcon, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { collection, addDoc,updateDoc,query,where,getDocs} from 'firebase/firestore';
 import { Db } from '../Firebase';
 import { ProductoInt } from '../Interfaces/InterfacesDeProfuctos';
