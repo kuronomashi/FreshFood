@@ -3,13 +3,19 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart, User, Menu, User2Icon} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import HomePage from '../pages/HomePage';
+import { useNavigate } from 'react-router-dom';
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const { isAuthenticated, isAdmin, logout } = useAuth();
   const { items } = useCart();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);  
-  
+
+  const SalirDelaeion = () => {
+    navigate("/")
+    logout()
+  };
+
   return (
     <nav className="bg-green-600 text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,7 +42,7 @@ export default function Navbar() {
             <div className="flex items-center space-x-4">
               {isAuthenticated && (
                 <button
-                  onClick={logout}
+                  onClick={SalirDelaeion}
                   className="bg-green-700 hover:bg-green-800 px-4 py-2 rounded-md"
                 >
                   Logout
@@ -75,9 +81,19 @@ export default function Navbar() {
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link to="/" className="block px-3 py-2 hover:bg-green-700 rounded-md">Home</Link>
+            {isAuthenticated && (
             <Link to="/order" className="block px-3 py-2 hover:bg-green-700 rounded-md">Order</Link>
+            )}
             {isAdmin && (
               <Link to="/admin" className="block px-3 py-2 hover:bg-green-700 rounded-md">Admin</Link>
+            )}
+            {isAuthenticated && (
+            <button
+            onClick={SalirDelaeion}
+            className="bg-green-700 hover:bg-green-800 px-4 py-2 rounded-md"
+          >
+            Logout
+          </button>
             )}
           </div>
         </div>

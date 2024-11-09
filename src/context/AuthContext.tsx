@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback,useEffect  } from 'react';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -6,6 +6,7 @@ interface AuthContextType {
   user: { email: string; role: 'admin' | 'customer' } | null;
   login: (email: string) => Promise<void>;
   logout: () => void;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -13,30 +14,50 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  type user = { email: string; role: 'admin' | 'customer' } | null;
   const [user, setUser] = useState<{ email: string; role: 'admin' | 'customer' } | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  
-  const login = useCallback(async (email: string) => {
-    if (email === import.meta.env.VITE_Admin1 || email === import.meta.env.VITE_Admin2) {
+  useEffect(() => {
+    // Recuperar los datos del usuario del localStorage al cargar la app
+    const savedUser = localStorage.getItem('user');
+    const savedIsAuthenticated = localStorage.getItem('isAuthenticated');
+    const savedIsAdmin = localStorage.getItem('isAdmin');
+
+    if (savedUser && savedIsAuthenticated === 'true') {
+      setUser(JSON.parse(savedUser));
       setIsAuthenticated(true);
-      setIsAdmin(true);
-      setUser({email, role: 'admin' });
-    } else if (email) {
-      setIsAuthenticated(true);
-      setIsAdmin(false);
-      setUser({ email, role: 'customer'});
+      setIsAdmin(savedIsAdmin === 'true');
     }
+    setLoading(false);
+  }, []);
+
+  const login = useCallback(async (email: string) => {
+    const isAdminUser = email === import.meta.env.VITE_Admin1 || email === import.meta.env.VITE_Admin2;
+    const userRole = isAdminUser ? 'admin' : 'customer';
+
+    setIsAuthenticated(true);
+    setIsAdmin(isAdminUser);
+    setUser({ email, role: userRole });
+
+    // Guardar los datos de la sesión en localStorage
+    localStorage.setItem('user', JSON.stringify({ email, role: userRole }));
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('isAdmin', isAdminUser.toString());
   }, []);
 
   const logout = useCallback(() => {
     setIsAuthenticated(false);
     setIsAdmin(false);
     setUser(null);
+
+    
+    localStorage.removeItem('user');
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('isAdmin');
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isAdmin, user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, isAdmin, user, login, logout,loading  }}>
       {children}
     </AuthContext.Provider>
   );

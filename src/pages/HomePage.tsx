@@ -10,8 +10,6 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { GoogleAuthProvider, signInWithPopup, getAuth, User, sendEmailVerification, sendPasswordResetEmail } from "firebase/auth";
 import { AlertType } from '../components/Alert';
 import { AlertContainer } from '../components/AlertContainer';
-import { PurchaseConfirmation } from '../components/PurchaseConfirmation';
-import { ConfirmationAlert } from '../components/ConfirmationAlert';
 
 
 
@@ -33,7 +31,6 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const auth = getAuth();
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
-  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
 
 
   useEffect(() => {
@@ -66,24 +63,6 @@ export default function HomePage() {
   const removeAlert = (id: string) => {
     setAlerts((prev) => prev.filter((alert) => alert.id !== id));
   };
-
-  const handleConfirmPurchase = () => {
-    setIsPurchaseModalOpen(false);
-    addAlert(
-      'success',
-      '¡Compra exitosa!',
-      'Tu pedido ha sido procesado correctamente.'
-    );
-  };
-  const handleCancelPurchase = () => {
-    setIsPurchaseModalOpen(false);
-    addAlert(
-      'info',
-      'Compra cancelada',
-      'Has cancelado la compra. ¡Te esperamos pronto!'
-    );
-  };
-
 
   const CrearNuevoUsuario = async (e: React.FormEvent) => {
     e.preventDefault();
