@@ -16,7 +16,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   type user = { email: string; role: 'admin' | 'customer' } | null;
   const [user, setUser] = useState<{ email: string; role: 'admin' | 'customer' } | null>(null);
 
-
+  
   const login = useCallback(async (email: string) => {
     if (email === import.meta.env.VITE_Admin1 || email === import.meta.env.VITE_Admin2) {
       setIsAuthenticated(true);
