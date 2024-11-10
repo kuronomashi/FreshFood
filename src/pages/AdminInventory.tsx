@@ -88,7 +88,7 @@ export default function AdminInventory() {
     if (tempStock !== null) await updateDoc(productDoc, { stock: tempStock });
     if (tempPrice !== null) await updateDoc(productDoc, { price: tempPrice });
     if (tempCategory !== null) await updateDoc(productDoc, { category: tempCategory });
-    if (tempExpiry !== null) await updateDoc(productDoc, { cate: tempExpiry });
+    if (tempExpiry !== null) await updateDoc(productDoc, { expiryDate: tempExpiry });
 
     setProducts(products.map(p =>
       p.id === id ? {
@@ -201,11 +201,11 @@ export default function AdminInventory() {
                     <input
                       type="number"
                       defaultValue={product.stock}
-                      min="1"
+                      min="0"
                       max="999"
                       onChange={(e) => {
                         const value = parseInt(e.target.value, 10);
-                        if (value <= 999 && value > 0) {
+                        if (value <= 999 && value >= 0) {
                           setTempStock(value);
                         }
                       }}

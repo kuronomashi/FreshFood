@@ -36,12 +36,14 @@ export const PurchaseConfirmation: React.FC<PurchaseConfirmationProps> = ({
                 <ShoppingCart className="w-6 h-6" />
                 <h3 className="text-lg font-semibold">Confirmar Compra</h3>
               </div>
+              {!process && (
               <button
                 onClick={onCancel}
                 className="text-white/80 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
+              )}
             </div>
           </div>
 

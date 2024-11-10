@@ -1,32 +1,24 @@
-import React, { useEffect, useState } from "react";
 import { Package, ShoppingCart, User, Phone, Mail, MapPin, Trash, Save } from 'lucide-react';
 import { Pedidos } from '../Interfaces/InterfacesDeProfuctos';
-import { collection, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
-import { Db, auth } from '../Firebase';
-import { useNavigate } from 'react-router-dom';
 import PdfGenrate from '../components/PdfOrder';
 import { pdf } from '@react-pdf/renderer';
 
 
 interface OrderDetailsProps {
     order: Pedidos;
+    onDeleteOrder: (id: string) => void;
 }
 
-export default function OrderDetails({ order }: OrderDetailsProps) {
-    const navigate = useNavigate();
-    const [products, setProducts] = useState<Pedidos[]>([]);
+export default function OrderDetails({ order ,onDeleteOrder}: OrderDetailsProps) {
     const totalItems = order.productos.reduce((acc, item) => acc + item.quantity, 0);
     const totalAmount = order.productos.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
-    const handleDelete = async (id: string) => {
-        const productDoc = doc(Db, 'Pedidos', id);
-        await deleteDoc(productDoc);
-        setProducts(products.filter(product => product.id !== id));
-        navigate("/admin");
-    };
+    const handleDelete = async () => {
+        await onDeleteOrder(order.id); // Llama la función de `AdminInventory`
+      };
 
     const CrearPdf = async () => {
-        const blob = await pdf(<PdfGenrate Order={order} CarInfo={order.productos} />).toBlob();
+        const blob = await pdf(<PdfGenrate Order={order} CarInfo={order.productos} id={order.id}/>).toBlob();
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -49,7 +41,7 @@ export default function OrderDetails({ order }: OrderDetailsProps) {
                             <Save className="mr-1" />
                         </button>
                         <button
-                            onClick={() => { handleDelete(order.id) }}
+                            onClick={handleDelete}
                             className="text-red-600 hover:text-red-900 mr-6 transform transition-transform duration-200 hover:scale-110"
                         >
                             <Trash className="mr-1" />
@@ -58,16 +50,16 @@ export default function OrderDetails({ order }: OrderDetailsProps) {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-3 mr-2">
                         <div>
                             <User className="w-5 h-5 text-emerald-600" />
                         </div>
-                        <div>
+                        <div className="w-full">
                             <p className="text-sm text-gray-500">Nombre</p>
-                            <p className="font-medium">{order.name}</p>
+                            <p className="font-medium break-words">{order.name}</p>
                         </div>
                     </div>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-3 mr-4">
                         <div>
                             <Mail className="w-5 h-5 text-emerald-600" />
                         </div>
@@ -77,18 +69,18 @@ export default function OrderDetails({ order }: OrderDetailsProps) {
                                 {order.email}</p>
                         </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                        <Phone className="w-5 h-5 text-emerald-600" />
+                    <div className="flex items-center space-x-3 mr-2">
+                        <Phone className="w-5 h-5 text-emerald-600" />  
                         <div>
                             <p className="text-sm text-gray-500">Telefono</p>
                             <p className="font-medium">{order.phone}</p>
                         </div>
                     </div>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-3 mr-2">
                         <MapPin className="w-5 h-5 text-emerald-600" />
-                        <div>
+                        <div className="w-full">
                             <p className="text-sm text-gray-500">Direccion</p>
-                            <p className="font-medium">{order.address}</p>
+                            <p className="font-medium truncate hover:overflow-visible hover:whitespace-normal hover:break-words">{order.address}</p>
                         </div>
                     </div>
 

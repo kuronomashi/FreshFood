@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { collection, addDoc,updateDoc,query,where,getDocs} from 'firebase/firestore';
+import { collection, addDoc, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import { Db } from '../Firebase';
 import { ProductoInt } from '../Interfaces/InterfacesDeProfuctos';
 import { AlertType } from '../components/Alert';
@@ -10,7 +10,7 @@ import { ConfirmationAlert } from '../components/ConfirmationAlert';
 
 
 interface AlertItem {
-  id: string; 
+  id: string;
   type: AlertType;
   title: string;
   message: string;
@@ -33,16 +33,18 @@ export default function AddProduct() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-      setIsPurchaseModalOpen(true)
+    setIsPurchaseModalOpen(true)
   };
 
   const AdicionProducto = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const productsCollection = collection(Db, 'productos');
-      const nameQuery = query(productsCollection, where('name', '==', product.name));
-      const querySnapshot = await getDocs(nameQuery);
-      if (!querySnapshot.empty) {
+      const querySnapshot = await getDocs(productsCollection);
+      const nameExists = querySnapshot.docs.some(doc =>
+        doc.data().name.toLowerCase() == product.name.toLowerCase()
+      );
+      if (nameExists) {
         addAlert(
           'error',
           'El producto ya existe',
@@ -94,14 +96,14 @@ export default function AddProduct() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-       <AlertContainer alerts={alerts} onDismiss={removeAlert} />
+      <AlertContainer alerts={alerts} onDismiss={removeAlert} />
       <ConfirmationAlert
-          title = "Añadir Producto"
-          message= "Estas seguro de añadir este producto?"
-          isOpen= {isPurchaseModalOpen}
-          onConfirm={handleConfirmPurchase}
-          onCancel={handleCancelPurchase}
-        />
+        title="Añadir Producto"
+        message="Estas seguro de añadir este producto?"
+        isOpen={isPurchaseModalOpen}
+        onConfirm={handleConfirmPurchase}
+        onCancel={handleCancelPurchase}
+      />
       <button
         onClick={() => navigate('/admin')}
         className="flex items-center text-gray-600 hover:text-gray-900 mb-6"
@@ -124,9 +126,10 @@ export default function AddProduct() {
                 required
                 value={product.name || ''}
                 onChange={(e) => {
-                  const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/; // Permite letras, espacios y tildes
-                  if (regex.test(e.target.value) && e.target.value.length <= 30) {
-                    setProduct({ ...product, name: e.target.value });
+                  const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/;
+                  const value = e.target.value.trimStart();
+                  if (regex.test(value) && value.length <= 30) {
+                    setProduct({ ...product, name: value });
                   }
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -156,10 +159,11 @@ export default function AddProduct() {
               </label>
               <textarea
                 required
-                value={product.description}
+                value={product.description || ''}
                 onChange={(e) => {
-                  if (e.target.value.length <= 100) {
-                    setProduct({ ...product, description: e.target.value });
+                  const value = e.target.value.replace(/^\s+/, '');
+                  if (value.length <= 100) {
+                    setProduct({ ...product, description: value });
                   }
                 }}
                 rows={3}
@@ -180,15 +184,15 @@ export default function AddProduct() {
                 step="0.01"
                 onChange={(e) => {
                   const value = parseFloat(e.target.value);
-                    setProduct({ ...product, price: value });
+                  setProduct({ ...product, price: value });
                 }}
                 onBlur={() => {
                   if (product.price <= 0) {
-                    setProduct({ ...product, price: 0.01 }); 
-                  }else if(product.price > 9999){
-                    setProduct({ ...product, price: 9999}); 
+                    setProduct({ ...product, price: 0.01 });
+                  } else if (product.price > 9999) {
+                    setProduct({ ...product, price: 9999 });
                   }
-                }}  
+                }}
 
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               />
@@ -206,15 +210,15 @@ export default function AddProduct() {
                 max="999"
                 onChange={(e) => {
                   const value = parseInt(e.target.value);
-                    setProduct({ ...product, stock: value });
+                  setProduct({ ...product, stock: value });
                 }}
                 onBlur={() => {
                   if (product.stock <= 0) {
-                    setProduct({ ...product, stock: 1 }); 
-                  }else if(product.stock > 999){
-                    setProduct({ ...product, stock: 999}); 
+                    setProduct({ ...product, stock: 1 });
+                  } else if (product.stock > 999) {
+                    setProduct({ ...product, stock: 999 });
                   }
-                }} 
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>

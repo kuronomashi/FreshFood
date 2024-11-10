@@ -1,4 +1,4 @@
-import React, { useState, useRef,useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { pdf } from '@react-pdf/renderer';
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +14,7 @@ import { PurchaseConfirmation } from '../components/PurchaseConfirmation';
 
 
 interface AlertItem {
-  id: string; 
+  id: string;
   type: AlertType;
   title: string;
   message: string;
@@ -90,11 +90,6 @@ export default function OrderPage() {
 
   const handleConfirmPurchase = () => {
     setBotonDeCompra(true)
-    addAlert(
-      'success',
-      '¡Compra exitosa!',
-      'Tu pedido ha sido procesado correctamente.'
-    );
     CambiarStock(items);
   };
   const handleCancelPurchase = () => {
@@ -142,7 +137,8 @@ export default function OrderPage() {
               'Lamentamos las molestias, porfavor revise de nuevo su carrito'
             );
             clearCart();
-            navigate("/");
+            setBotonDeCompra(false);
+            setIsPurchaseModalOpen(false);
             return;
           }
         }
@@ -164,9 +160,13 @@ export default function OrderPage() {
         }
       }
       GuardarPedidos();
-      CrearPdf();
       setIsPurchaseModalOpen(false);
-      setBotonDeCompra(false)
+      setBotonDeCompra(false);
+      addAlert(
+        'success',
+        '¡Compra exitosa!',
+        'Tu pedido ha sido procesado correctamente.'
+      );
     } catch (error) {
       console.error("Error al actualizar el stock de los productos:", error);
     }
@@ -203,18 +203,18 @@ export default function OrderPage() {
       const generatedId = docRef.id;
       await updateDoc(docRef, { id: generatedId });
       clearCart();
+      await CrearPdf(generatedId);
     } catch (error) {
       console.error('Error al agregar el producto:', error);
     }
   };
 
-  const CrearPdf = async () => {
-    deliveryInfo.id = product.id
-    const blob = await pdf(<PdfGenrate Order={deliveryInfo} CarInfo={items} />).toBlob();
+  const CrearPdf = async (id: string) => {
+    const blob = await pdf(<PdfGenrate Order={deliveryInfo} CarInfo={items} id={id}/>).toBlob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `Resumen de Factura (${deliveryInfo.id}).pdf`;
+    link.download = `Resumen de Factura (${id}).pdf`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -223,14 +223,14 @@ export default function OrderPage() {
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <AlertContainer alerts={alerts} onDismiss={removeAlert} />
       <PurchaseConfirmation
-          product={deliveryInfo}
-          cantidad={items.length}
-          process={prossesPay}
-          total={total}
-          isOpen= {isPurchaseModalOpen}
-          onConfirm={handleConfirmPurchase}
-          onCancel={handleCancelPurchase}
-        />
+        product={deliveryInfo}
+        cantidad={items.length}
+        process={prossesPay}
+        total={total}
+        isOpen={isPurchaseModalOpen}
+        onConfirm={handleConfirmPurchase}
+        onCancel={handleCancelPurchase}
+      />
       <h1 className="text-3xl font-bold mb-8">Tu Orden</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -251,13 +251,17 @@ export default function OrderPage() {
                     <input
                       type="number"
                       min="1"
+                      max={item.stock}
+                      step="1"
                       value={item.quantity}
                       onChange={(e) => {
                         const value = parseInt(e.target.value);
-                        if (value <= item.stock) {
                           updateQuantity(item.id, value);
-                        } else {
-                          updateQuantity(item.id, item.stock); 
+                      }}
+                      onKeyDown={(e) => {
+                        // Previene la escritura manual
+                        if (e.key !== "ArrowUp" && e.key !== "ArrowDown") {
+                          e.preventDefault();
                         }
                       }}
                       className="w-20 px-2 py-1 border rounded"
@@ -293,14 +297,14 @@ export default function OrderPage() {
                     required
                     value={deliveryInfo.name}
                     onChange={(e) => {
-                      const newValue = e.target.value;
+                      const newValue = e.target.value.replace(/^\s+/, '');
                       if (/^[a-zA-ZáéíóúÁÉÍÓÚ\s]*$/.test(newValue) && newValue.length <= 40) {
                         setDeliveryInfo({ ...deliveryInfo, name: newValue });
                       }
                     }}
                     onBlur={() => {
                       if (deliveryInfo.name.length < 3) {
-                        setDeliveryInfo({ ...deliveryInfo, name: "" }); 
+                        setDeliveryInfo({ ...deliveryInfo, name: "" });
                       }
                     }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -320,7 +324,7 @@ export default function OrderPage() {
                     }}
                     onBlur={() => {
                       if (deliveryInfo.phone.length !== 10) {
-                        setDeliveryInfo({ ...deliveryInfo, phone: "" }); 
+                        setDeliveryInfo({ ...deliveryInfo, phone: "" });
                       }
                     }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -333,7 +337,7 @@ export default function OrderPage() {
                     required
                     value={deliveryInfo.address}
                     onChange={(e) => {
-                      const newValue = e.target.value;
+                      const newValue = e.target.value.replace(/^\s+/, '');
                       if (/^[a-zA-Z0-9\s.,#-]*$/.test(newValue) && newValue.length <= 25) {
                         setDeliveryInfo({ ...deliveryInfo, address: newValue });
                       }
@@ -354,17 +358,17 @@ export default function OrderPage() {
                     required
                     value={paymentInfo.cardNumber}
                     onChange={(e) => {
-                      let newValue = e.target.value.replace(/\D/g, ""); 
-                      newValue = newValue.replace(/(\d{4})(?=\d)/g, "$1 "); 
-                  
-                      if (newValue.length <= 19) { 
+                      let newValue = e.target.value.replace(/\D/g, "");
+                      newValue = newValue.replace(/(\d{4})(?=\d)/g, "$1 ");
+
+                      if (newValue.length <= 19) {
                         setPaymentInfo({ ...paymentInfo, cardNumber: newValue });
                       }
                     }}
                     onBlur={() => {
-                      const onlyDigits = paymentInfo.cardNumber.replace(/\s/g, ""); 
+                      const onlyDigits = paymentInfo.cardNumber.replace(/\s/g, "");
                       if (onlyDigits.length !== 16) {
-                        setPaymentInfo({ ...paymentInfo, cardNumber: "" }); 
+                        setPaymentInfo({ ...paymentInfo, cardNumber: "" });
                       }
                     }}
                     placeholder="0000 0000 0000 0000"
@@ -382,15 +386,23 @@ export default function OrderPage() {
                       onChange={(e) => {
                         let newValue = e.target.value.replace(/\D/g, "");
                         if (newValue.length <= 4) {
-                          if (newValue.length >= 3) {
-                            newValue = newValue.slice(0, 2) + "/" + newValue.slice(2, 4); 
-                          }
+                          newValue = newValue.slice(0, 2) + (newValue.length > 2 ? "/" + newValue.slice(2, 4) : "");
+
                           setPaymentInfo({ ...paymentInfo, expiryDate: newValue });
                         }
                       }}
                       onBlur={() => {
-                        if (paymentInfo.expiryDate.length !== 5) {
-                          setPaymentInfo({ ...paymentInfo, expiryDate: "" }); 
+                        const [month, year] = paymentInfo.expiryDate.split("/");
+                        if (
+                          !month ||
+                          !year ||
+                          parseInt(month) < 1 ||
+                          parseInt(month) > 12 ||
+                          month === "00" ||
+                          parseInt(year) < 1 ||
+                          parseInt(year) > 99
+                        ) {
+                          setPaymentInfo({ ...paymentInfo, expiryDate: "" });
                         }
                       }}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -410,7 +422,7 @@ export default function OrderPage() {
                       }}
                       onBlur={() => {
                         if (paymentInfo.cvv.length !== 3) {
-                          setPaymentInfo({ ...paymentInfo, cvv: "" }); 
+                          setPaymentInfo({ ...paymentInfo, cvv: "" });
                         }
                       }}
                       placeholder="000"
