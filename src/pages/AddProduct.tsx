@@ -113,7 +113,7 @@ export default function AddProduct() {
       </button>
 
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold mb-6">Añade nuevo producto</h1>
+        <h1 className="font-mitr font-semibold text-2xl font-bold mb-6">Añade nuevo producto</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -134,7 +134,7 @@ export default function AdminInventory() {
           onCancel={handleCancelPurchase}
         />
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Administracion de Inventario</h1>
+        <h1 className="font-mitr font-semibold text-3xl font-bold">Administracion de Inventario</h1>
         <div className="flex space-x-4">
           <select
             value={filter}

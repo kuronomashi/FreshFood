@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, User, Menu, User2Icon} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -11,18 +11,23 @@ export default function Navbar() {
   const { items } = useCart();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);  
 
+  useEffect(() => {
+    
+  }, []);
+
   const SalirDelaeion = () => {
     navigate("/")
     logout()
   };
 
   return (
+    isAuthenticated && (
     <nav className="bg-green-600 text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="font-commissioner font-Thin flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <span className="font-bold text-2xl">Fresh Foods</span>
+              <span className="font-mitr font-semibold text-3xl">Fresh Foods</span>
             </Link>
           </div>
 
@@ -98,6 +103,8 @@ export default function Navbar() {
           </div>
         </div>
       )}
-    </nav>
+
+      
+    </nav>)
   );
 }
