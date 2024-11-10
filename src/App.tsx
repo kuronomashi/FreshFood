@@ -35,7 +35,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/inventory"
+                  path="/admin/inventory"
                   element={
                     <ProtectedRoute>
                       <AdminInventory />

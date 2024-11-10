@@ -136,8 +136,9 @@ interface CartItem {
 interface ModelOrder {
   Order: Pedidos;
   CarInfo: CartItem[];
+  id:string;
 }
-export default function InvoicePDF({ Order, CarInfo }: ModelOrder) {
+export default function InvoicePDF({ Order, CarInfo,id }: ModelOrder) {
 
   const today = new Date();
   const formattedDate = today.toLocaleDateString('es-ES', {
@@ -180,7 +181,7 @@ export default function InvoicePDF({ Order, CarInfo }: ModelOrder) {
         {/* Invoice Details */}
         <View>
           <Text style={[styles.invoiceDetails, { marginBottom: 5 }]}>
-            Idetificador pedido: {Order.id}
+            Idetificador pedido: {id}
           </Text>
           <Text style={[styles.invoiceDetails, { marginBottom: 5 }]}>
             Fecha: {formattedDate}

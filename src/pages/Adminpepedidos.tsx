@@ -6,13 +6,24 @@ import { Pedidos } from '../Interfaces/InterfacesDeProfuctos';
 import OrderList from '../components/OrderList';
 import OrderDetails from '../components/OrderDetails';
 import { Trash2 ,ArrowLeftIcon} from 'lucide-react';
+import { AlertType } from '../components/Alert';
+import { AlertContainer } from '../components/AlertContainer';
+import { ConfirmationAlert } from '../components/ConfirmationAlert';
 
-export default function AdminInventory() {
 
-
+interface AlertItem {
+  id: string;
+  type: AlertType;
+  title: string;
+  message: string;
+}
+export default function AdminPedido() {
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [Pedid, setProducts] = useState<Pedidos[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const selectedOrder = Pedid.find(Pedidos => Pedidos.id === selectedOrderId);
+  const [idaEliminar, setIdaEliminar] = useState<string | null>(null);
 
   const [error, setError] = useState<string | null>(null);
 
@@ -30,14 +41,60 @@ export default function AdminInventory() {
     fetchPedidos();
   }, []);
 
+  const addAlert = (type: AlertType, title: string, message: string) => {
+    const newAlert = {
+      id: Date.now().toString(),
+      type,
+      title,
+      message,
+    };
+    setAlerts((prev) => [...prev, newAlert]);
+    setTimeout(() => removeAlert(newAlert.id), 5000);
+  };
+  const removeAlert = (id: string) => {
+    setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+  };
+
+  const handleConfirmPurchase = () => {
+    setIsPurchaseModalOpen(false);
+    addAlert(
+      'success',
+      'Se elimino exitosamente el pedido',
+      'Espero tengas mas clientes en el futuro'
+    );
+    handleDelete(idaEliminar!)
+  };
+  const handleCancelPurchase = () => {
+    setIsPurchaseModalOpen(false);
+    addAlert(
+      'info',
+      'Eliminacion Cancelada',
+      'Revisa que pededio ya puedes eliminar'
+    );
+  };
+
+  const ConfimarEliminacion = (id: string) => {
+    setIdaEliminar(id);
+    setIsPurchaseModalOpen(true);
+  };
+
   const handleDelete = async (id: string) => {
     const productDoc = doc(Db, 'Pedidos', id);
     await deleteDoc(productDoc);
-    setProducts(Pedid.filter(product => product.id !== id));
+    setProducts((prev) => prev.filter((product) => product.id !== id));
+    setSelectedOrderId(null); 
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
+      <AlertContainer alerts={alerts} onDismiss={removeAlert} />
+      <ConfirmationAlert
+        title="Eliminar Pedido"
+        message="Estas seguro de eliminar este pedido?"
+        isOpen={isPurchaseModalOpen}
+        onConfirm={handleConfirmPurchase}
+        onCancel={handleCancelPurchase}
+      />
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center mb-8">
       <h1 className="text-3xl font-bold">Administracion Pedido</h1>
@@ -64,7 +121,7 @@ export default function AdminInventory() {
           {/* Order Details */}
           <div className="lg:col-span-2">
             {selectedOrder ? (
-              <OrderDetails order={selectedOrder} />
+              <OrderDetails order={selectedOrder} onDeleteOrder={ConfimarEliminacion} />
             ) : (
               <div className="bg-white rounded-2xl shadow-lg p-6 flex items-center justify-center h-48">
                 <p className="text-gray-500 text-lg">Selecciona una orden para ver detalles</p>

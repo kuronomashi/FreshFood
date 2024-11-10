@@ -90,7 +90,11 @@ export default function HomePage() {
     try {
       const auth = getAuth();
       await sendPasswordResetEmail(auth, email);
-      alert('Se ha enviado un correo para restablecer la contraseña');
+      addAlert(
+        'success',
+        'Correo para retaurar tu contraseña enviado',
+        'Revisa tu correo electrónico para recuperar tu cuenta'
+      );
     } catch (error) {
       addAlert(
         'error',
@@ -227,7 +231,7 @@ export default function HomePage() {
                     {isAuthenticated && (
                       <button
                         onClick={() => addItem({ ...product, quantity: 1 })}
-                        className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                        className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transform transition-transform duration-150 active:scale-110"
                       >
                         <ShoppingCart className="h-5 w-5" />
                         <span>Añadir a la Cesta</span>

@@ -26,9 +26,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems(current => {
       const exists = current.find(i => i.id === item.id);
       if (exists) {
-        return current.map(i =>
-          i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
-        );
+        return current;
       }
       return [...current, item];
     });
