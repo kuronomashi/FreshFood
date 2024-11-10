@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { ShoppingCart } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { collection, getDocs } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Db } from '../Firebase';
@@ -10,8 +11,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { GoogleAuthProvider, signInWithPopup, getAuth, User, sendEmailVerification, sendPasswordResetEmail } from "firebase/auth";
 import { AlertType } from '../components/Alert';
 import { AlertContainer } from '../components/AlertContainer';
-
-
+import  BackgroundCarousel  from '../components/BackgorundCarrusel';
 
 interface AlertItem {
   id: string; 
@@ -26,6 +26,9 @@ export default function HomePage() {
   const [showLogin, setShowLogin] = useState(false);
   const [esadmin, CambiarUsuarioA] = useState(false);
   const [email, setEmail] = useState('');
+  const { items } = useCart();
+  
+  const [showFloatingCart, setShowFloatingCart] = useState(false);
   const [password, setPassword] = useState('');
   const [products, setProducts] = useState<ProductoInt[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -44,8 +47,18 @@ export default function HomePage() {
         setError((error as Error).message);
       }
     };
-
     fetchProducts();
+    const handleScroll = () => {
+      const scrolledPastNavbar = window.scrollY > 100 ; 
+      setShowFloatingCart(scrolledPastNavbar);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+    
   }, []);
 
 
@@ -165,18 +178,23 @@ export default function HomePage() {
     <div className="min-h-screen">
       {/* Hero Section */}
       <AlertContainer alerts={alerts} onDismiss={removeAlert} />
-      <section className="relative bg-green-600 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold mb-4">Fresh Foods Distribuidor</h1>
-            <p className="text-xl mb-8">Frutas, verduras y productos lácteos de primera calidad</p>
-            {!isAuthenticated && (<button
+      <section className="relative bg-black text-white py-36">
+        <BackgroundCarousel/>
+        <div className="relative z-10 h-full flex items-center">
+          <div className="max-w-7xl mx-auto px-4 text-center">
+            <h1 className="text-8xl md:text-6lg font-semibold font-mitr mb-6 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+            Fresh Foods 
+            </h1>
+            <p className="text-xl font-montserrat font-commissioner md:text-xl mb-8 text-gray-200">
+              <h1 className='drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]'>Frutas, verduras y otros productos de primera calidad</h1>
+            </p>
+            {!isAuthenticated && (
+              <button
               onClick={() => setShowLogin(true)}
-              className="bg-white text-green-600 font-bold px-6 py-3 rounded-md font-semibold hover:bg-green-50"
+              className="inline-flex items-center bg-green-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-green-700 transition-colors transition-transform transform hover:scale-105"
             >
-              Acceder
+              <h1 className='font-commissioner text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]'>Acceder</h1>
             </button>)}
-
           </div>
         </div>
       </section>
@@ -185,14 +203,14 @@ export default function HomePage() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className='flex flex-col items-center text-center mb-8'>
-            <h2 className="text-3xl font-bold text-center mb-8">Nuestros productos</h2>
+            <h2 className="font-commissioner font-extrabold text-3xl font-bold text-center mb-8">Nuestros productos</h2>
             <div className="flex items-center mb-8">
-              <label htmlFor="category" className="mr-4 text- font-medium">Filtrar:</label>
+              <label htmlFor="category" className="font-commissioner font-extrabold mr-4 text- font-medium">Filtrar:</label>
               <select
                 id="category"
                 value={selectedCategory}
                 onChange={handleCategoryChange}
-                className="px-2 border rounded-md"
+                className="font-commissioner font-semibold px-2 border rounded-md appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-green-700 pr-8"
               >
                 <option value="All">Todos</option>
                 <option value="Frutas">Frutas</option>
@@ -215,11 +233,11 @@ export default function HomePage() {
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <h3 className="text-xl font-semibold break-words max-w-[250px] break-words">{product.name}</h3>
+                      <h3 className="font-custom font-extrabold text-lg font-semibold break-words max-w-[250px] break-words">{product.name}</h3>
                     </div>
 
                     <div>
-                      <span className="bg-green-100 text-green-800 text-sm px-2 py-1 rounded">
+                      <span className="font-commissioner font-semibold bg-green-100 text-green-800 text-sm px-2 py-1 rounded">
                         {product.category}
                       </span>
                     </div>
@@ -231,7 +249,7 @@ export default function HomePage() {
                     {isAuthenticated && (
                       <button
                         onClick={() => addItem({ ...product, quantity: 1 })}
-                        className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transform transition-transform duration-150 active:scale-110"
+                        className="font-roboto font-bold flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transform transition-transform duration-150 active:scale-110"
                       >
                         <ShoppingCart className="h-5 w-5" />
                         <span>Añadir a la Cesta</span>
@@ -322,6 +340,20 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+  {showFloatingCart && isAuthenticated && (
+        <Link to="/order" className="fixed bottom-8 right-8 z-50">
+          <div className="relative p-3 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 transition-transform transform hover:scale-110">
+            <ShoppingCart className="h-6 w-6" />
+            {items.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {items.length}
+              </span>
+            )}
+          </div>
+        </Link>
+      )}  
+      
     </div>
   );
 }

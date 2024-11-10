@@ -11,7 +11,7 @@ interface OrderListProps {
 export default function OrderList({ orders, selectedOrderId, onSelectOrder }: OrderListProps) {
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Pedidos</h2>
+      <h2 className="font-mitr font-semibold text-2xl text-gray-800 mb-6">Pedidos</h2>
       <div className="space-y-4">
         {orders.map((order) => (
           <button

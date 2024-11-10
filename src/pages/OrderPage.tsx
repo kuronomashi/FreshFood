@@ -33,8 +33,6 @@ interface PaymentInfo {
 }
 
 export default function OrderPage() {
-
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [products, setProducts] = useState<ProductoInt[]>([]);
   const { items, total, updateQuantity, removeItem, clearCart } = useCart();
@@ -57,7 +55,9 @@ export default function OrderPage() {
     cvv: ''
   });
 
-
+  useEffect(() => {
+    window.scrollTo(0, 0); // Desplaza la página hacia el inicio
+  }, []);
   useEffect(() => {
     const savedDeliveryInfo = localStorage.getItem("deliveryInfo");
     const savedPaymentInfo = localStorage.getItem("paymentInfo");
@@ -210,7 +210,7 @@ export default function OrderPage() {
   };
 
   const CrearPdf = async (id: string) => {
-    const blob = await pdf(<PdfGenrate Order={deliveryInfo} CarInfo={items} id={id}/>).toBlob();
+    const blob = await pdf(<PdfGenrate Order={deliveryInfo} CarInfo={items} id={id} />).toBlob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -231,9 +231,9 @@ export default function OrderPage() {
         onConfirm={handleConfirmPurchase}
         onCancel={handleCancelPurchase}
       />
-      <h1 className="text-3xl font-bold mb-8">Tu Orden</h1>
+      <h1 className="font-mitr font-semibold text-3xl  mb-8">Tu Orden</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="font-commissioner grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Cart Items */}
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Items en la Cesta</h2>
@@ -245,7 +245,7 @@ export default function OrderPage() {
                 <div key={item.id} className="flex items-center justify-between border-b pb-4">
                   <div className="flex-1">
                     <h3 className="font-medium">{item.name}</h3>
-                    <p className="text-gray-600">${item.price} dollar</p>
+                    <p className="text-gray-600">${item.price}</p>
                   </div>
                   <div className="flex items-center space-x-4">
                     <input
@@ -255,15 +255,12 @@ export default function OrderPage() {
                       step="1"
                       value={item.quantity}
                       onChange={(e) => {
-                        const value = parseInt(e.target.value);
+                        const value = parseInt(e.target.value, 10);
+                        if (!isNaN(value) && value > 0 && value <= item.stock) {
                           updateQuantity(item.id, value);
-                      }}
-                      onKeyDown={(e) => {
-                        // Previene la escritura manual
-                        if (e.key !== "ArrowUp" && e.key !== "ArrowDown") {
-                          e.preventDefault();
                         }
-                      }}
+                      }
+                      }
                       className="w-20 px-2 py-1 border rounded"
                     />
                     <button

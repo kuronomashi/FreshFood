@@ -172,9 +172,9 @@ export default function InvoicePDF({ Order, CarInfo,id }: ModelOrder) {
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.invoiceDetails}>Fresh Food, Inc.</Text>
-            <Text style={styles.invoiceDetails}>Av. Saludable 456</Text>
-            <Text style={styles.invoiceDetails}>Tel: (123) 456-7890</Text>
-            <Text style={styles.invoiceDetails}>info@freshfood.com</Text>
+            <Text style={styles.invoiceDetails}>Cra10#19–64,Cl.20#9-45</Text>
+            <Text style={styles.invoiceDetails}>Tel: (313) 3696176</Text>
+            <Text style={styles.invoiceDetails}>freshfooducol@gmail.com</Text>
           </View>
         </View>
 
