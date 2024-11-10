@@ -10,7 +10,15 @@ export interface ProductoInt {
   expiryDate:string;
 }
 
+export interface InfCliente{
+    name: string;
+    phone: string;
+    address: string;
+    cardNumber: string;
+    expiryDate: string;
+    cvv: string;
 
+}
 
 interface CartItem {
   id: string;

@@ -6,7 +6,6 @@ import OrderPage from './pages/OrderPage';
 import AdminPedido from './pages/Adminpepedidos';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminInventory from './pages/AdminInventory';
-import AdminProducts from './pages/AdminProducts';
 import AddProduct from './pages/AddProduct';
 import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
@@ -42,14 +41,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                <Route
-                  path="/admin/products"
-                  element={
-                    <ProtectedRoute>
-                      <AdminProducts />
-                    </ProtectedRoute>
-                  }
-                />
+                
                 <Route
                   path="/admin/products/new"
                   element={

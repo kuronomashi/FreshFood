@@ -183,15 +183,19 @@ export default function AddProduct() {
                 max="9999"
                 step="0.01"
                 onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  setProduct({ ...product, price: value });
+                  const value = e.target.value === '' ? '' : parseFloat(e.target.value);
+                  if (value === '' || (!isNaN(value) && value <= 9999)) {
+                    setProduct({ ...product, price: value as number });
+                  }
                 }}
                 onBlur={() => {
-                  if (product.price <= 0) {
-                    setProduct({ ...product, price: 0.01 });
-                  } else if (product.price > 9999) {
-                    setProduct({ ...product, price: 9999 });
+                  let price = product.price;
+                  if (isNaN(price) || price < 0.01) {
+                    price = 0.01; 
+                  } else if (price > 9999) {
+                    price = 9999; 
                   }
+                  setProduct({ ...product, price });
                 }}
 
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -209,15 +213,19 @@ export default function AddProduct() {
                 min="1"
                 max="999"
                 onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  setProduct({ ...product, stock: value });
+                  const value = e.target.value === '' ? '' : parseInt(e.target.value, 10);
+                  if (value === '' || (!isNaN(value) && value >= 1 && value <= 999)) {
+                    setProduct({ ...product, stock: value as number });
+                  }
                 }}
                 onBlur={() => {
-                  if (product.stock <= 0) {
-                    setProduct({ ...product, stock: 1 });
-                  } else if (product.stock > 999) {
-                    setProduct({ ...product, stock: 999 });
+                  let stock = product.stock;
+                  if (isNaN(stock) || stock < 1) {
+                    stock = 1;
+                  } else if (stock > 999) {
+                    stock = 999;
                   }
+                  setProduct({ ...product, stock });
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               />

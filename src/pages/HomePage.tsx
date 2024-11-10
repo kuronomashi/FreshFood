@@ -185,9 +185,8 @@ export default function HomePage() {
             <h1 className="text-8xl md:text-6lg font-semibold font-mitr mb-6 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
             Fresh Foods 
             </h1>
-            <p className="text-xl font-montserrat font-commissioner md:text-xl mb-8 text-gray-200">
-              <h1 className='drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]'>Frutas, verduras y otros productos de primera calidad</h1>
-            </p>
+              <h1 className='text-xl font-montserrat font-commissioner md:text-xl mb-8 text-gray-200 drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]'>Frutas, verduras y otros productos de primera calidad</h1>
+            
             {!isAuthenticated && (
               <button
               onClick={() => setShowLogin(true)}
