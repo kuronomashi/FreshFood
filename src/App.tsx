@@ -12,6 +12,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRouteAuth from './components/ProtectedRouteAuteticate';
+import Audio from "./components/ReproductorAudio"
 
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
       <CartProvider>
         <BrowserRouter>
           <div className="min-h-screen flex flex-col bg-gray-50">
+            <Audio />
             <Navbar />
             <main className="flex-grow">
               <Routes>
