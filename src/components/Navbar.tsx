@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 export default function Navbar() {
   const navigate = useNavigate();
   const { isAuthenticated, isAdmin, logout } = useAuth();
-  const { items } = useCart();
+  const { items,clearCart } = useCart();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);  
 
   useEffect(() => {
@@ -16,8 +16,9 @@ export default function Navbar() {
   }, []);
 
   const SalirDelaeion = () => {
-    navigate("/")
+    clearCart();
     logout()
+    navigate("/")
   };
 
   return (
