@@ -42,7 +42,7 @@ export default function Footer() {
 
         <div className="mt-8 pt-8 border-t border-green-700">
           <p className="text-center text-sm">
-            © {new Date().getFullYear()} Fresh Foods Distribution. All rights reserved.
+          <a href="https://youtu.be/dQw4w9WgXcQ?si=w7BANk_TBtD3kGCy" target="_blank" rel="noopener noreferrer">© </a>{new Date().getFullYear()} Fresh Foods Distribution. All rights reserved.
           </p>
         </div>
       </div>
