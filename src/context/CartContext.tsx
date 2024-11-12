@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 interface CartItem {
   id: string;
@@ -21,6 +21,20 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+
+  useEffect(() => {
+    const savedItems = localStorage.getItem('cartItems');
+    if (savedItems) {
+      setItems(JSON.parse(savedItems));
+    }
+  }, []);
+
+  // Guardar los datos del carrito en localStorage cada vez que se actualicen
+  useEffect(() => {
+    if (items.length > 0) {
+      localStorage.setItem('cartItems', JSON.stringify(items));
+    }
+  }, [items]);
 
   const addItem = useCallback((item: CartItem) => {
     setItems(current => {

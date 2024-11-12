@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRouteAuth from './components/ProtectedRouteAuteticate';
 
 
 function App() {
@@ -24,7 +25,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage/>} />
                 
-                <Route path="/order" element={<OrderPage />} />
+                <Route path="/order" element={<ProtectedRouteAuth> <OrderPage /></ProtectedRouteAuth>} />
                 <Route
                   path="/admin"
                   element={

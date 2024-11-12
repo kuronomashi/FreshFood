@@ -49,8 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(false);
     setIsAdmin(false);
     setUser(null);
-
-    
+    localStorage.removeItem("InfoUsuario");
     localStorage.removeItem('user');
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('isAdmin');

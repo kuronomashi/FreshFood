@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { pdf } from '@react-pdf/renderer';
-import { useNavigate } from 'react-router-dom';
 import PdfGenrate from '../components/PdfOrder';
 import { Pedidos, ProductoInt, InfCliente } from '../Interfaces/InterfacesDeProfuctos';
-import { collection, addDoc, updateDoc, getDoc, doc,getDocs,setDoc,query,where  } from 'firebase/firestore';
-import { Db,auth } from '../Firebase';
+import { collection, addDoc, updateDoc, getDoc, doc,setDoc, } from 'firebase/firestore';
+import { Db, auth } from '../Firebase';
 import { Eraser } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AlertType } from '../components/Alert';
@@ -30,6 +29,7 @@ export default function OrderPage() {
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [prossesPay, setBotonDeCompra] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [Efectuado, setEfectuado] = useState(false);
   const [deliveryInfo, setDeliveryInfo] = useState<Pedidos>({
     id: '',
     name: '',
@@ -48,35 +48,85 @@ export default function OrderPage() {
     cvv: '',
   });
 
+  useEffect(() => {
+    if (!isSaving) {
+      const savedDeliveryInfo = localStorage.getItem("InfoUsuario");
+      if (savedDeliveryInfo) {
+        setInfoCLiente(JSON.parse(savedDeliveryInfo));
+        setIsSaving(true);
+        console.log("Hay datos locales")
+      } else {
+        CardatosDeFirebase();
+      }
+    }
+  }, [isSaving]);
+
+  const CardatosDeFirebase = async () => {
+    const user = auth.currentUser;
+
+    if (user) {
+      const userRef = doc(Db, "AuthInfomation", user.uid);
   
+      try {
+        const docSnap = await getDoc(userRef);
+        
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          setInfoCLiente({
+            name: userData.InfoCliente.name || '',
+            phone: userData.InfoCliente.phone || '',
+            address: userData.InfoCliente.address || '',
+            cardNumber: userData.InfoCliente.cardNumber || '',
+            expiryDate: userData.InfoCliente.expiryDate || '',
+            cvv: userData.InfoCliente.cvv || '',
+          });
+          console.log("Se cargaron los datos");
+          setIsSaving(true);
+        } else {
+          setIsSaving(true);
+          console.log("No se encontraron los datos");
+        }
+      } catch (error) {
+        console.error("Error al obtener los datos de Firebase:", error);
+      }
+    } else {
+      console.log("No hay un usuario logueado");
+      setIsSaving(true);
+    }
+  };
+
+  useEffect(() => {
+    if (isSaving) {
+      localStorage.setItem("InfoUsuario", JSON.stringify(InfoCliente));
+      console.log("Se guardo de maner local");
+    }
+  }, [InfoCliente]);
 
   const saveUserDataToFirebase = async () => {
-    if (isSaving) return; 
-    setIsSaving(true);
+    if (Efectuado) return;
+    setEfectuado(true);
     try {
       const user = auth.currentUser;
       if (user) {
-        const userRef = doc(Db, "AuthInfomation", user.uid); 
-  
+        const userRef = doc(Db, "AuthInfomation", user.uid);
+
         const docSnap = await getDoc(userRef);
-  
+
         if (docSnap.exists()) {
           const docData = docSnap.data();
-  
-          if (JSON.stringify(docData.InfoCliente) !== JSON.stringify(InfoCliente)) {
+
+          if (JSON.stringify(docData.InfoCliente) != JSON.stringify(InfoCliente)) {
             await setDoc(userRef, {
-              userId: user.uid,
-              InfoCliente,
-              createdAt: docData.createdAt, 
-              updatedAt: new Date(), 
+              InfoCliente
             });
             console.log("Cambio Realizado en Db");
+          }else{
+            console.log("No hay cambios");
           }
         } else {
           await setDoc(userRef, {
             userId: user.uid,
-            InfoCliente,
-            createdAt: new Date(),
+            InfoCliente
           });
           console.log("Nuevo documento creado con éxito en Firebase");
         }
@@ -84,58 +134,22 @@ export default function OrderPage() {
     } catch (error) {
       console.error("Error al guardar o actualizar datos en Firebase:", error);
     } finally {
-      setIsSaving(false);
+      setEfectuado(false);
     }
   };
-
-  useEffect(() => {
-    window.scrollTo(0, 0); 
-  }, []);
-
-  useEffect(() => {
-    const fetchUserInfo = async () => { 
-      const user = auth.currentUser; 
-      console.log(user)
-
-      if (user) {
-        const userRef = collection(Db, "AuthInfomation");
-        const q = query(userRef, where("uid", "==", user.uid)); 
-
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          const userData = querySnapshot.docs[0].data();
-          setInfoCLiente({
-            name: userData.name || '',
-            phone: userData.phone || '',
-            address: userData.address || '',
-            cardNumber: userData.cardNumber || '',
-            expiryDate: userData.expiryDate || '',
-            cvv: userData.cvv || '',
-          });
-        } else {
-          const userDocRef = doc(Db, "AuthInfomation", user.uid); 
-          await setDoc(userDocRef, {
-            uid: user.uid,
-            ...InfoCliente,
-          });
-        }
-      } else {
-        console.log("No hay un usuario logueado");
-      }
-    };
-
-    fetchUserInfo();
-  }, []);
 
   const GuardoIfousuarioFirebase = () => {
     const isPaymentInfoComplete = InfoCliente && Object.values(InfoCliente).every(value => value !== '');
-    
-    if (!initialLoad && isPaymentInfoComplete) {
-      console.log("Información cargada:", deliveryInfo, InfoCliente);
+
+    if (isPaymentInfoComplete) {
+      saveUserDataToFirebase();
     }
   };
-  
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const addAlert = (type: AlertType, title: string, message: string) => {
     const newAlert = {
       id: Date.now().toString(),
@@ -161,7 +175,7 @@ export default function OrderPage() {
       'Has cancelado la compra. ¡Te esperamos pronto!'
     );
   };
-  
+
   const today = new Date();
   const formattedDate = today.toLocaleDateString('es-ES', {
     year: 'numeric',
@@ -312,16 +326,14 @@ export default function OrderPage() {
                         if (value !== '' && typeof value === 'number' && value > item.stock) {
                           value = item.stock; // Limita el valor al stock máximo si es mayor
                         }
-                          updateQuantity(item.id, value as number); // Solo llama a la función si `value` es un número
-                        
+                        updateQuantity(item.id, value as number); // Solo llama a la función si `value` es un número
+
                       }}
                       onBlur={(e) => {
                         const value = parseInt(e.target.value, 10);
                         if (isNaN(value) || value < 1) {
-                          // Restablece al mínimo si está vacío o menor que 1
                           updateQuantity(item.id, 1);
                         } else if (value > item.stock) {
-                          // Restablece al stock máximo si es mayor que el stock disponible
                           updateQuantity(item.id, item.stock);
                         }
                       }}
@@ -367,6 +379,8 @@ export default function OrderPage() {
                     onBlur={() => {
                       if (InfoCliente.name.length < 3) {
                         setInfoCLiente({ ...InfoCliente, name: "" });
+                      } else {
+                        GuardoIfousuarioFirebase();
                       }
                     }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -387,6 +401,8 @@ export default function OrderPage() {
                     onBlur={() => {
                       if (InfoCliente.phone.length !== 10) {
                         setInfoCLiente({ ...InfoCliente, phone: "" });
+                      } else {
+                        GuardoIfousuarioFirebase();
                       }
                     }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -403,6 +419,9 @@ export default function OrderPage() {
                       if (/^[a-zA-Z0-9\s.,#-]*$/.test(newValue) && newValue.length <= 25) {
                         setInfoCLiente({ ...InfoCliente, address: newValue });
                       }
+                    }}
+                    onBlur={() => {
+                      GuardoIfousuarioFirebase();
                     }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                   />
@@ -431,6 +450,8 @@ export default function OrderPage() {
                       const onlyDigits = InfoCliente.cardNumber.replace(/\s/g, "");
                       if (onlyDigits.length !== 16) {
                         setInfoCLiente({ ...InfoCliente, cardNumber: "" });
+                      } else {
+                        GuardoIfousuarioFirebase();
                       }
                     }}
                     placeholder="0000 0000 0000 0000"
@@ -465,6 +486,8 @@ export default function OrderPage() {
                           parseInt(year) > 99
                         ) {
                           setInfoCLiente({ ...InfoCliente, expiryDate: "" });
+                        } else {
+                          GuardoIfousuarioFirebase();
                         }
                       }}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -485,6 +508,8 @@ export default function OrderPage() {
                       onBlur={() => {
                         if (InfoCliente.cvv.length !== 3) {
                           setInfoCLiente({ ...InfoCliente, cvv: "" });
+                        } else {
+                          GuardoIfousuarioFirebase();
                         }
                       }}
                       placeholder="000"
