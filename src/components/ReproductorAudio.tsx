@@ -27,7 +27,7 @@ const AudioControl: React.FC = () => {
     <div>
       <audio
         ref={audioRef}
-        src="Resourses/NieR_ Automata  A Beautiful Song  Opera Boss Lyrics.mp3"
+        src="Resourses/NieR_-Automata-A-Beautiful-Song-Opera-Boss-Lyrics.ogg"
         loop
       />
     </div>
