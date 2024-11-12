@@ -6,12 +6,12 @@ import OrderPage from './pages/OrderPage';
 import AdminPedido from './pages/Adminpepedidos';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminInventory from './pages/AdminInventory';
-import AdminProducts from './pages/AdminProducts';
 import AddProduct from './pages/AddProduct';
 import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRouteAuth from './components/ProtectedRouteAuteticate';
 
 
 function App() {
@@ -25,7 +25,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage/>} />
                 
-                <Route path="/order" element={<OrderPage />} />
+                <Route path="/order" element={<ProtectedRouteAuth> <OrderPage /></ProtectedRouteAuth>} />
                 <Route
                   path="/admin"
                   element={
@@ -42,14 +42,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                <Route
-                  path="/admin/products"
-                  element={
-                    <ProtectedRoute>
-                      <AdminProducts />
-                    </ProtectedRoute>
-                  }
-                />
+                
                 <Route
                   path="/admin/products/new"
                   element={

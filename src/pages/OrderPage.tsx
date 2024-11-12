@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { pdf } from '@react-pdf/renderer';
-import { useNavigate } from 'react-router-dom';
 import PdfGenrate from '../components/PdfOrder';
-import { Pedidos, ProductoInt } from '../Interfaces/InterfacesDeProfuctos';
-import { collection, addDoc, updateDoc, getDoc, doc } from 'firebase/firestore';
-import { Db } from '../Firebase';
+import { Pedidos, ProductoInt, InfCliente } from '../Interfaces/InterfacesDeProfuctos';
+import { collection, addDoc, updateDoc, getDoc, doc,setDoc, } from 'firebase/firestore';
+import { Db, auth } from '../Firebase';
 import { Eraser } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AlertType } from '../components/Alert';
@@ -20,26 +19,17 @@ interface AlertItem {
   message: string;
 }
 
-interface DeliveryInfo {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-}
-interface PaymentInfo {
-  cardNumber: string;
-  expiryDate: string;
-  cvv: string;
-}
-
 export default function OrderPage() {
   const { user } = useAuth();
   const [products, setProducts] = useState<ProductoInt[]>([]);
   const { items, total, updateQuantity, removeItem, clearCart } = useCart();
+  const [initialLoad, setInitialLoad] = useState(true);
+
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [prossesPay, setBotonDeCompra] = useState(false);
-
+  const [isSaving, setIsSaving] = useState(false);
+  const [Efectuado, setEfectuado] = useState(false);
   const [deliveryInfo, setDeliveryInfo] = useState<Pedidos>({
     id: '',
     name: '',
@@ -49,30 +39,116 @@ export default function OrderPage() {
     productos: [],
     date: ''
   });
-  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
+  const [InfoCliente, setInfoCLiente] = useState<InfCliente>({
+    name: '',
+    phone: '',
+    address: '',
     cardNumber: '',
     expiryDate: '',
-    cvv: ''
+    cvv: '',
   });
 
   useEffect(() => {
-    window.scrollTo(0, 0); // Desplaza la página hacia el inicio
+    if (!isSaving) {
+      const savedDeliveryInfo = localStorage.getItem("InfoUsuario");
+      if (savedDeliveryInfo) {
+        setInfoCLiente(JSON.parse(savedDeliveryInfo));
+        setIsSaving(true);
+        console.log("Hay datos locales")
+      } else {
+        CardatosDeFirebase();
+      }
+    }
+  }, [isSaving]);
+
+  const CardatosDeFirebase = async () => {
+    const user = auth.currentUser;
+
+    if (user) {
+      const userRef = doc(Db, "AuthInfomation", user.uid);
+  
+      try {
+        const docSnap = await getDoc(userRef);
+        
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          setInfoCLiente({
+            name: userData.InfoCliente.name || '',
+            phone: userData.InfoCliente.phone || '',
+            address: userData.InfoCliente.address || '',
+            cardNumber: userData.InfoCliente.cardNumber || '',
+            expiryDate: userData.InfoCliente.expiryDate || '',
+            cvv: userData.InfoCliente.cvv || '',
+          });
+          console.log("Se cargaron los datos");
+          setIsSaving(true);
+        } else {
+          setIsSaving(true);
+          console.log("No se encontraron los datos");
+        }
+      } catch (error) {
+        console.error("Error al obtener los datos de Firebase:", error);
+      }
+    } else {
+      console.log("No hay un usuario logueado");
+      setIsSaving(true);
+    }
+  };
+
+  useEffect(() => {
+    if (isSaving) {
+      localStorage.setItem("InfoUsuario", JSON.stringify(InfoCliente));
+      console.log("Se guardo de maner local");
+    }
+  }, [InfoCliente]);
+
+  const saveUserDataToFirebase = async () => {
+    if (Efectuado) return;
+    setEfectuado(true);
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const userRef = doc(Db, "AuthInfomation", user.uid);
+
+        const docSnap = await getDoc(userRef);
+
+        if (docSnap.exists()) {
+          const docData = docSnap.data();
+
+          if (JSON.stringify(docData.InfoCliente) != JSON.stringify(InfoCliente)) {
+            await setDoc(userRef, {
+              InfoCliente
+            });
+            console.log("Cambio Realizado en Db");
+          }else{
+            console.log("No hay cambios");
+          }
+        } else {
+          await setDoc(userRef, {
+            userId: user.uid,
+            InfoCliente
+          });
+          console.log("Nuevo documento creado con éxito en Firebase");
+        }
+      }
+    } catch (error) {
+      console.error("Error al guardar o actualizar datos en Firebase:", error);
+    } finally {
+      setEfectuado(false);
+    }
+  };
+
+  const GuardoIfousuarioFirebase = () => {
+    const isPaymentInfoComplete = InfoCliente && Object.values(InfoCliente).every(value => value !== '');
+
+    if (isPaymentInfoComplete) {
+      saveUserDataToFirebase();
+    }
+  };
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
   }, []);
-  useEffect(() => {
-    const savedDeliveryInfo = localStorage.getItem("deliveryInfo");
-    const savedPaymentInfo = localStorage.getItem("paymentInfo");
-
-    if (savedDeliveryInfo) setDeliveryInfo(JSON.parse(savedDeliveryInfo));
-    if (savedPaymentInfo) setPaymentInfo(JSON.parse(savedPaymentInfo));
-  }, []);
-  useEffect(() => {
-    localStorage.setItem("deliveryInfo", JSON.stringify(deliveryInfo));
-  }, [deliveryInfo]);
-
-  useEffect(() => {
-    localStorage.setItem("paymentInfo", JSON.stringify(paymentInfo));
-  }, [paymentInfo]);
-
 
   const addAlert = (type: AlertType, title: string, message: string) => {
     const newAlert = {
@@ -87,7 +163,6 @@ export default function OrderPage() {
   const removeAlert = (id: string) => {
     setAlerts((prev) => prev.filter((alert) => alert.id !== id));
   };
-
   const handleConfirmPurchase = () => {
     setBotonDeCompra(true)
     CambiarStock(items);
@@ -100,6 +175,7 @@ export default function OrderPage() {
       'Has cancelado la compra. ¡Te esperamos pronto!'
     );
   };
+
   const today = new Date();
   const formattedDate = today.toLocaleDateString('es-ES', {
     year: 'numeric',
@@ -110,16 +186,6 @@ export default function OrderPage() {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-  });
-
-  const [product, setPedido] = useState<Pedidos>({
-    id: '',
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    productos: [],
-    date: ''
   });
 
   const CambiarStock = async (items: { id: string; quantity: number }[]) => {
@@ -191,15 +257,16 @@ export default function OrderPage() {
   }
   const GuardarPedidos = async () => {
     deliveryInfo.email = user.email;
-    product.name = deliveryInfo.name;
-    product.email = user.email;
-    product.phone = deliveryInfo.phone;
-    product.address = deliveryInfo.address;
-    product.productos = items;
-    product.date = formattedDate + " - " + formattedTime;
+    deliveryInfo.name = InfoCliente.name;
+    deliveryInfo.email = user.email;
+    deliveryInfo.phone = InfoCliente.phone;
+    deliveryInfo.address = InfoCliente.address;
+    deliveryInfo.productos = items;
+    console.log(deliveryInfo.productos)
+    deliveryInfo.date = formattedDate + " - " + formattedTime;
     try {
       const productsCollection = collection(Db, 'Pedidos');
-      const docRef = await addDoc(productsCollection, product);
+      const docRef = await addDoc(productsCollection, deliveryInfo);
       const generatedId = docRef.id;
       await updateDoc(docRef, { id: generatedId });
       clearCart();
@@ -250,17 +317,27 @@ export default function OrderPage() {
                   <div className="flex items-center space-x-4">
                     <input
                       type="number"
-                      min="1"
+                      min="0"
                       max={item.stock}
                       step="1"
                       value={item.quantity}
                       onChange={(e) => {
-                        const value = parseInt(e.target.value, 10);
-                        if (!isNaN(value) && value > 0 && value <= item.stock) {
-                          updateQuantity(item.id, value);
+                        let value = e.target.value === '' ? '' : parseInt(e.target.value, 10);
+                        if (value !== '' && typeof value === 'number' && value > item.stock) {
+                          value = item.stock; // Limita el valor al stock máximo si es mayor
                         }
-                      }
-                      }
+                        updateQuantity(item.id, value as number); // Solo llama a la función si `value` es un número
+
+                      }}
+                      onBlur={(e) => {
+                        const value = parseInt(e.target.value, 10);
+                        if (isNaN(value) || value < 1) {
+                          updateQuantity(item.id, 1);
+                        } else if (value > item.stock) {
+                          updateQuantity(item.id, item.stock);
+                        }
+                      }}
+
                       className="w-20 px-2 py-1 border rounded"
                     />
                     <button
@@ -292,16 +369,18 @@ export default function OrderPage() {
                   <input
                     type="text"
                     required
-                    value={deliveryInfo.name}
+                    value={InfoCliente.name}
                     onChange={(e) => {
                       const newValue = e.target.value.replace(/^\s+/, '');
                       if (/^[a-zA-ZáéíóúÁÉÍÓÚ\s]*$/.test(newValue) && newValue.length <= 40) {
-                        setDeliveryInfo({ ...deliveryInfo, name: newValue });
+                        setInfoCLiente({ ...InfoCliente, name: newValue });
                       }
                     }}
                     onBlur={() => {
-                      if (deliveryInfo.name.length < 3) {
-                        setDeliveryInfo({ ...deliveryInfo, name: "" });
+                      if (InfoCliente.name.length < 3) {
+                        setInfoCLiente({ ...InfoCliente, name: "" });
+                      } else {
+                        GuardoIfousuarioFirebase();
                       }
                     }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -312,16 +391,18 @@ export default function OrderPage() {
                   <input
                     type="text"
                     required
-                    value={deliveryInfo.phone}
+                    value={InfoCliente.phone}
                     onChange={(e) => {
                       const newValue = e.target.value;
                       if (/^\d{0,10}$/.test(newValue)) {
-                        setDeliveryInfo({ ...deliveryInfo, phone: newValue });
+                        setInfoCLiente({ ...InfoCliente, phone: newValue });
                       }
                     }}
                     onBlur={() => {
-                      if (deliveryInfo.phone.length !== 10) {
-                        setDeliveryInfo({ ...deliveryInfo, phone: "" });
+                      if (InfoCliente.phone.length !== 10) {
+                        setInfoCLiente({ ...InfoCliente, phone: "" });
+                      } else {
+                        GuardoIfousuarioFirebase();
                       }
                     }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -332,12 +413,15 @@ export default function OrderPage() {
                   <input
                     type="text"
                     required
-                    value={deliveryInfo.address}
+                    value={InfoCliente.address}
                     onChange={(e) => {
                       const newValue = e.target.value.replace(/^\s+/, '');
                       if (/^[a-zA-Z0-9\s.,#-]*$/.test(newValue) && newValue.length <= 25) {
-                        setDeliveryInfo({ ...deliveryInfo, address: newValue });
+                        setInfoCLiente({ ...InfoCliente, address: newValue });
                       }
+                    }}
+                    onBlur={() => {
+                      GuardoIfousuarioFirebase();
                     }}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                   />
@@ -353,19 +437,21 @@ export default function OrderPage() {
                   <input
                     type="text"
                     required
-                    value={paymentInfo.cardNumber}
+                    value={InfoCliente.cardNumber}
                     onChange={(e) => {
                       let newValue = e.target.value.replace(/\D/g, "");
                       newValue = newValue.replace(/(\d{4})(?=\d)/g, "$1 ");
 
                       if (newValue.length <= 19) {
-                        setPaymentInfo({ ...paymentInfo, cardNumber: newValue });
+                        setInfoCLiente({ ...InfoCliente, cardNumber: newValue });
                       }
                     }}
                     onBlur={() => {
-                      const onlyDigits = paymentInfo.cardNumber.replace(/\s/g, "");
+                      const onlyDigits = InfoCliente.cardNumber.replace(/\s/g, "");
                       if (onlyDigits.length !== 16) {
-                        setPaymentInfo({ ...paymentInfo, cardNumber: "" });
+                        setInfoCLiente({ ...InfoCliente, cardNumber: "" });
+                      } else {
+                        GuardoIfousuarioFirebase();
                       }
                     }}
                     placeholder="0000 0000 0000 0000"
@@ -379,17 +465,17 @@ export default function OrderPage() {
                       type="text"
                       placeholder="MM/YY"
                       required
-                      value={paymentInfo.expiryDate}
+                      value={InfoCliente.expiryDate}
                       onChange={(e) => {
                         let newValue = e.target.value.replace(/\D/g, "");
                         if (newValue.length <= 4) {
                           newValue = newValue.slice(0, 2) + (newValue.length > 2 ? "/" + newValue.slice(2, 4) : "");
 
-                          setPaymentInfo({ ...paymentInfo, expiryDate: newValue });
+                          setInfoCLiente({ ...InfoCliente, expiryDate: newValue });
                         }
                       }}
                       onBlur={() => {
-                        const [month, year] = paymentInfo.expiryDate.split("/");
+                        const [month, year] = InfoCliente.expiryDate.split("/");
                         if (
                           !month ||
                           !year ||
@@ -399,7 +485,9 @@ export default function OrderPage() {
                           parseInt(year) < 1 ||
                           parseInt(year) > 99
                         ) {
-                          setPaymentInfo({ ...paymentInfo, expiryDate: "" });
+                          setInfoCLiente({ ...InfoCliente, expiryDate: "" });
+                        } else {
+                          GuardoIfousuarioFirebase();
                         }
                       }}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -410,16 +498,18 @@ export default function OrderPage() {
                     <input
                       type="text"
                       required
-                      value={paymentInfo.cvv}
+                      value={InfoCliente.cvv}
                       onChange={(e) => {
                         const newValue = e.target.value.replace(/\D/g, "");
                         if (newValue.length <= 3) {
-                          setPaymentInfo({ ...paymentInfo, cvv: newValue });
+                          setInfoCLiente({ ...InfoCliente, cvv: newValue });
                         }
                       }}
                       onBlur={() => {
-                        if (paymentInfo.cvv.length !== 3) {
-                          setPaymentInfo({ ...paymentInfo, cvv: "" });
+                        if (InfoCliente.cvv.length !== 3) {
+                          setInfoCLiente({ ...InfoCliente, cvv: "" });
+                        } else {
+                          GuardoIfousuarioFirebase();
                         }
                       }}
                       placeholder="000"
