@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAdmin(false);
     setUser(null);
     localStorage.removeItem("InfoUsuario");
+    localStorage.removeItem("cartItems");
     localStorage.removeItem('user');
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('isAdmin');

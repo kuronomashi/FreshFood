@@ -203,6 +203,7 @@ export default function OrderPage() {
               'Lamentamos las molestias, porfavor revise de nuevo su carrito'
             );
             clearCart();
+            localStorage.removeItem("cartItems");
             setBotonDeCompra(false);
             setIsPurchaseModalOpen(false);
             return;
@@ -233,6 +234,7 @@ export default function OrderPage() {
         '¡Compra exitosa!',
         'Tu pedido ha sido procesado correctamente.'
       );
+      
     } catch (error) {
       console.error("Error al actualizar el stock de los productos:", error);
     }
@@ -270,6 +272,7 @@ export default function OrderPage() {
       const generatedId = docRef.id;
       await updateDoc(docRef, { id: generatedId });
       clearCart();
+      localStorage.removeItem("cartItems");
       await CrearPdf(generatedId);
     } catch (error) {
       console.error('Error al agregar el producto:', error);
