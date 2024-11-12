@@ -6,12 +6,12 @@ const AudioControl: React.FC = () => {
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
 
   const songs = [
-    "/resources/NieR_-Automata-A-Beautiful-Song-Opera-Boss-Lyrics.ogg", 
-    "/resources/Bunny-Girl.ogg",
-    "/resources/椎名もた_siinamota_-Young-Girl-A-少女A.ogg",
+    "/resources/NieR_-Automata-A-Beautiful-Song-Opera-Boss-Lyrics.ogg",
     "/resources/It_s-Going-Down-Now.ogg", 
-    "/resources/Aishite-Aishite-Aishite.ogg", 
+    "/resources/Aishite-Aishite-Aishite.ogg",
+    "/resources/椎名もた_siinamota_-Young-Girl-A-少女A.ogg",
     "/resources/BLOODY-STREAM.ogg",
+    "/resources/Bunny-Girl.ogg",
   ];
 
   useEffect(() => {
