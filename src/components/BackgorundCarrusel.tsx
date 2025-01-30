@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 
 // Array de URLs de imágenes que se mostrarán en el carrusel
 const images = [  
-  'https://w.wallhaven.cc/full/zy/wallhaven-zyjr2w.jpg',
-  'https://static0.gamerantimages.com/wordpress/wp-content/uploads/2024/08/zenless-zone-zero-qingyi-trailer-reveal.jpg',
-  'https://w.wallhaven.cc/full/9d/wallhaven-9d1mkw.jpg',
-  'https://w.wallhaven.cc/full/rr/wallhaven-rr81d1.jpg',
-  'https://w.wallhaven.cc/full/gp/wallhaven-gpyzm7.jpg'
+  'https://c4.wallpaperflare.com/wallpaper/64/34/361/arbol-fruta-naturaleza-pera-wallpaper-preview.jpg',
+  'https://w.wallhaven.cc/full/qd/wallhaven-qdl3kr.jpg',
+  'https://www.dependenciasocialmedia.com/wp-content/uploads/2015/07/fruits-and-veggies-1920x1200-wallpaper-frutas-vegetales-collage.jpg',
+  'https://w.wallhaven.cc/full/ne/wallhaven-nek52k.jpg',
+  'https://c4.wallpaperflare.com/wallpaper/786/875/758/frutas-melocotones-naturaleza-rojos-wallpaper-preview.jpg'
 ];
 
 // Componente principal del carrusel de fondo
